@@ -8,6 +8,7 @@ rm -f "$output_file"
 
 # Iterate over each file in the directory
 cd html
+rm "$output_file"
 echo "#ifndef HTML_H" >> "$output_file"
 echo "#define HTML_H" >> "$output_file"
 echo "" >> "$output_file"
