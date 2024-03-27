@@ -4,7 +4,7 @@
 #include "wifi.h"
 #include "html.h"
 #include "datahandler.h"
-
+#include "pzem.h"
 
 bool ledState = 0;
 const int ledPin = 2;
@@ -120,9 +120,9 @@ void loop() {
   unsigned long currentMillis = millis();  // Get the current time
 
   if (currentMillis - previousMillis >= 1000) { //one second non-blocking delay
-    Serial.println("1 second");
+    readPzem();
     notifyClients();
-    
+
     previousMillis = currentMillis; 
   }
   ws.cleanupClients();
