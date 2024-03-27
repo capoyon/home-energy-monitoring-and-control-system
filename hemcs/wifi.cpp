@@ -1,11 +1,16 @@
 #include "wifi.h"
 
-// Replace with your network credentials
-const char* ssid = "WiFi";
-const char* password = "password112233";
 
+void startWifiAP(const char* ssid, const char* password) {
+  WiFi.softAP(ssid, password);
+  Serial.print("WiFi AP started with SSID: ");
+  Serial.print(ssid);
+  Serial.print(", ");
+  Serial.print("password: ");
+  Serial.println(password);
+}
 
-void initWifi(){
+void connectToWifi(const char* ssid, const char* password) {
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
   Serial.print("Connecting to SSID: ");
@@ -19,4 +24,9 @@ void initWifi(){
   Serial.print("Local IP: ");
   // Print ESP Local IP Address
   Serial.println(WiFi.localIP());
+}
+
+void initWifi(){
+  startWifiAP("HEMCS", "hemcs123");
+  connectToWifi("WiFi", "password112233");
 }

@@ -74,11 +74,6 @@ void setup(){
 
   initWebSocket();
 
-  // Route for root / web page
-  // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-  //   request->send_P(200, "text/html", overview_html, overview_html_len, processor);
-  // });
-
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", overview_html, overview_html_len);
   });
