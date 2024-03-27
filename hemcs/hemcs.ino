@@ -3,6 +3,8 @@
 
 #include "wifi.h"
 #include "html.h"
+#include "datahandler.h"
+
 
 bool ledState = 0;
 const int ledPin = 2;
@@ -13,7 +15,19 @@ AsyncWebSocket ws("/ws");
 
 
 void notifyClients() {
-  ws.textAll(String(ledState));
+ // Sample sensor data
+    double sensor_data[] = {1.34, 32.43, 2.23};
+    size_t data_size = 3;
+
+    // Get JSON object from sensor data
+    StaticJsonDocument<200> jsonDoc = graphSensorReading(sensor_data, data_size);
+
+    // Convert JSON object to string
+    String jsonString;
+    serializeJson(jsonDoc, jsonString);
+
+    // Send JSON string over WebSocket
+    ws.textAll(jsonString);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -74,6 +88,7 @@ void setup(){
 
   initWebSocket();
 
+  // html route for request
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", overview_html, overview_html_len);
   });
@@ -98,7 +113,18 @@ void setup(){
   server.begin();
 }
 
+
+unsigned long previousMillis = 0; // for non-blocking delay
+
 void loop() {
+  unsigned long currentMillis = millis();  // Get the current time
+
+  if (currentMillis - previousMillis >= 1000) { //one second non-blocking delay
+    Serial.println("1 second");
+    notifyClients();
+    
+    previousMillis = currentMillis; 
+  }
   ws.cleanupClients();
   digitalWrite(ledPin, ledState);
 }
