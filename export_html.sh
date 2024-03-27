@@ -1,52 +1,25 @@
 #!/bin/bash
 
-# Source and destination directories
-source_dir="./html"
-destination_dir="./hemcs"
+# Define the output file
+output_file="../hemcs/html.h"
 
-# Create destination directory if it doesn't exist
-mkdir -p "$destination_dir"
+# Delete the output file if it already exists
+rm -f "$output_file"
 
-# Loop through all files in the source directory
-for file in "$source_dir"/*; do
-    if [ -f "$file" ]; then
-        # Get the filename without the path#!/bin/bash
-# This script is used to compress the html files to .gz in current directory
-# Then converts it to .h file using xxd
-
-# Script filename
-script_filename="compress.sh"
-source_dir=$(pwd)/html
-output_dir=$(pwd)/hemcs
-
-rm -r ${source_dir}/tmp
-mkdir ${source_dir}/tmp
-
-# Compress all html to gz
-for file in $source_dir/*.html; do
-    filename=$(basename "$file")
-    echo "$filename"
-    mv "$file" "${source_dir}/tmp/${filename%.*}"
-done
-
-cd $source_dir/tmp
-
+# Iterate over each file in the directory
+cd html
+echo "#ifndef HTML_H" >> "$output_file"
+echo "#define HTML_H" >> "$output_file"
+echo "" >> "$output_file"
 for file in *; do
-    filename=$(basename "$file")
-    echo "$filename > $output_dir/$filename.h"
-    xxd -i "$file" "$output_dir/$filename.h"
-    rm "$file"
-done
-
-rm -r ${source_dir}/tmp
-
-        filename=$(basename "$file")
-        
-        # Apply xxd -i to the file and save the output to a new file in the destination directory
-        xxd -i "$file" > "$destination_dir/$filename.h"
-        
-        echo "Processed: $file"
+    # Check if it's a regular file
+    if [ -f "$file" ]; then
+        # Convert the file to hexadecimal using xxd and append it to the output file
+        xxd -i "$file" >> "$output_file"
+        echo "" >> "$output_file"  # Add an empty line between each file
     fi
 done
+echo "" >> "$output_file"
+echo "#endif //HTML_H" >> "$output_file"
 
-echo "All files processed."
+echo "Conversion completed. Output written to $output_file"
