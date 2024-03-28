@@ -264,10 +264,18 @@
             var lgId = `lg${i}`;
             console.log(i);
             if(i === 0){
-                appendLiveGraphToContent("Power", 'kW', lgTotalId, lgId);
+                appendLiveGraphToContent("Voltage", 'kW', lgTotalId, lgId);
             } else if(i === 1){
                 appendLiveGraphToContent("Current", 'A', lgTotalId, lgId);
             } else if(i === 2){
+                appendLiveGraphToContent("Power", 'W', lgTotalId, lgId);
+            } else if(i === 3){
+                appendLiveGraphToContent("Energy", 'kWh', lgTotalId, lgId);
+            } else if(i === 4){
+                appendLiveGraphToContent("Frequency", 'Hz', lgTotalId, lgId);
+            } else if(i === 5){
+                appendLiveGraphToContent("Power Factor", '', lgTotalId, lgId);
+            } else if(i === 6){
                 appendUsageToContent(data[i]);
             }
             else {

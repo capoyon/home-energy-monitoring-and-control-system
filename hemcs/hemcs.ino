@@ -16,8 +16,8 @@ AsyncWebSocket ws("/ws");
 
 void notifyClients() {
  // Sample sensor data
-    double sensor_data[] = {1.34, 32.43, 2.23};
-    size_t data_size = 3;
+    float sensor_data[] = {voltage, current, power, energy, frequency, pf, 0.12};
+    size_t data_size = sizeof(sensor_data)/sizeof(sensor_data[0]);
 
     // Get JSON object from sensor data
     StaticJsonDocument<200> jsonDoc = graphSensorReading(sensor_data, data_size);
@@ -80,9 +80,9 @@ String processor(const String& var){
 void setup(){
   // Serial port for debugging purposes
   Serial.begin(115200);
-
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
+  Serial.println("");
+  Serial.println("");
+  Serial.println("");
   
   initWifi();
 

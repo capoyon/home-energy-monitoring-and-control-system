@@ -57,6 +57,13 @@ PZEM004Tv30 pzem(PZEM_SERIAL);
 PZEM004Tv30 pzem(PZEM_SERIAL);
 #endif
 
+float voltage;
+float current;
+float power;
+float energy;
+float frequency;
+float pf;
+
 
 void readPzem() {
     // Print the custom address of the PZEM
@@ -64,12 +71,12 @@ void readPzem() {
     Serial.println(pzem.readAddress(), HEX);
 
     // Read the data from the sensor
-    float voltage = pzem.voltage();
-    float current = pzem.current();
-    float power = pzem.power();
-    float energy = pzem.energy();
-    float frequency = pzem.frequency();
-    float pf = pzem.pf();
+    voltage = pzem.voltage();
+    current = pzem.current();
+    power = pzem.power();
+    energy = pzem.energy();
+    frequency = pzem.frequency();
+    pf = pzem.pf();
 
     // Check if the data is valid
     if(isnan(voltage)){
