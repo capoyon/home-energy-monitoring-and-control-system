@@ -79,6 +79,64 @@
             background-color: rgb(179, 179, 179); 
             pointer-events: none;
         }
+
+        .card {
+            position: relative;
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #999;
+            font-size: large;
+        }
+
+        /* Default styles */
+        .switch {
+            position: absolute;
+            right: 0;
+            margin-right: 8px;
+            display: inline-block;
+            width: 95px;
+            height: 50px;
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 42px;
+            width: 42px;
+            left: 5px;
+            bottom: 4px;
+            background-color: #fff;
+            transition: .4s;
+            border-radius: 68px;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(42px);
+        }
+
     
         @media screen and (max-width: 600px) {
             #w {
@@ -133,17 +191,20 @@
     </div>
 
     <div id="content">
-        <div class="card">
-            <h2>Add</h2>
-            <p><button id="button" class="button">1</button></p>
-            <p><button id="button" class="button">3</button></p>
-            <p><button id="button" class="button">5</button></p>
-            <p><button id="button" class="button">10</button></p>
-            <p><button id="button" class="button">20</button></p>
-            <p><button id="button" class="button">30</button></p>
-            <p><button id="button" class="button">50</button></p>
-            <p class="state">State: <span id="state">%s</span></p>
-        </div>
+
+            <h2>Settings</h2>
+            <div class="card" id="wifi">Wi-Fi <div class="subcard">Wifi</div></div>
+            <div class="card" id="hotspot">Hotspot<div class="subcard">HEMCS: password123</div></div>
+            <div class="card" id="currency">Currency<select id="currencySelect">
+                <option value="₱">₱</option>
+                <option value="$">$</option>
+                <option value="€">€</option>
+                <option value="£">£</option>
+                <option value="¥">¥</option>
+              </select></div>
+            <div class="card" id="electric-rate">Electricity rate<div class="subcard">₱12.23/kWh</div></div>
+            <div class="card">24 hour time format<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="output"><span class="slider"></span></label></div>
+            <div class="card">Set time automatically<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="output"><span class="slider"></span></label></div>
     </div>
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
@@ -184,6 +245,85 @@
         function toggle(val) {
             websocket.send(val);
         }
-    </script>
+
+
+
+    document.getElementById('electric-rate').addEventListener('click', function() {
+    var input;
+    var floatValue;
+    do {
+        input = prompt('Enter rate per kWh:');
+        
+        if (input === null) {
+            return;
+        }
+        floatValue = parseFloat(input);
+
+        if (!isNaN(floatValue) && floatValue > 0) {
+            break;
+        } else {
+            alert('Invalid input.');
+        }
+    } while (true);
+    alert('Electricity rate updated successfully!\nRate: ₱' + floatValue + " per kWh");
+});
+
+
+document.getElementById('wifi').addEventListener('click', function() {
+    // Regular expression to validate WiFi SSID
+    var ssidRegex = /^[A-Za-z0-9_ -]{1,32}$/;
+
+    // Regular expression to validate WiFi password (minimum 8 characters)
+    var passwordRegex = /^.{8,}$/;
+
+    var ssid = prompt('Enter WiFi Name:');
+
+    if (ssid !== null) { // Check if user hasn't cancelled the SSID prompt
+        if (!ssidRegex.test(ssid)) { // Check if SSID matches the pattern
+            alert('Invalid WiFi name. Please enter up to 32 characters, using only alphanumeric characters, _, - and space.');
+            return; // Exit the function
+        }
+
+        var password = prompt('Enter WiFi Password:');
+
+        if (password !== null) { // Check if user hasn't cancelled the password prompt
+            if (!passwordRegex.test(password)) { // Check if password matches the pattern
+                alert('Invalid WiFi password. Password must be at least 8 characters long.');
+                return; // Exit the function
+            }
+
+            alert('Wi-Fi updated successfully!\nName: ' + ssid + '\nPassword: ' + password);
+        }
+    }
+});
+
+document.getElementById('hotspot').addEventListener('click', function() {
+    // Regular expression to validate WiFi SSID
+    var ssidRegex = /^[A-Za-z0-9_ -]{1,32}$/;
+
+    // Regular expression to validate WiFi password (minimum 8 characters)
+    var passwordRegex = /^.{8,}$/;
+
+    var ssid = prompt('Enter Hotspot SSID (up to 32 characters, only alphanumeric, _, - and space allowed):');
+
+    if (ssid !== null) { // Check if user hasn't cancelled the SSID prompt
+        if (!ssidRegex.test(ssid)) { // Check if SSID matches the pattern
+            alert('Invalid Hotspot SSID. Please enter up to 32 characters, using only alphanumeric characters, _, - and space.');
+            return; // Exit the function
+        }
+
+        var password = prompt('Enter WiFi Password (at least 8 characters):');
+
+        if (password !== null) { // Check if user hasn't cancelled the password prompt
+            if (!passwordRegex.test(password)) { // Check if password matches the pattern
+                alert('Invalid Hotspot password. Password must be at least 8 characters long.');
+                return; // Exit the function
+            }
+
+            alert('Hotspot updated successfully!\nName: ' + ssid + '\nPassword: ' + password);
+        }
+    }
+});
+</script>
 </body>
 </html>

@@ -1,5 +1,7 @@
 #include "wifi.h"
 
+DataHandler datahandler;
+
 
 void startWifiAP(const char* ssid, const char* password) {
   WiFi.softAP(ssid, password);
@@ -27,6 +29,6 @@ void connectToWifi(const char* ssid, const char* password) {
 }
 
 void initWifi(){
-  startWifiAP("HEMCS", "hemcs123");
-  connectToWifi("WiFi", "password112233");
+  startWifiAP(datahandler.getAPSsid(), datahandler.getAPPassword());
+  connectToWifi(datahandler.getWifiSSID(), datahandler.getWifiPassword());
 }

@@ -3,7 +3,6 @@
 
 #include "wifi.h"
 #include "html.h"
-#include "datahandler.h"
 #include "pzem.h"
 
 bool ledState = 0;
@@ -12,22 +11,14 @@ const int ledPin = 2;
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+Pzem pzem(16,17);
 
 
 void notifyClients() {
  // Sample sensor data
-    float sensor_data[] = {voltage, current, power, energy, frequency, pf, 0.12};
+    float sensor_data[] = {pzem.voltage(), pzem.current(), pzem.power(), pzem.energy(), pzem.frequency(), pzem.powerfactor(), 0.12};
     size_t data_size = sizeof(sensor_data)/sizeof(sensor_data[0]);
-
-    // Get JSON object from sensor data
-    StaticJsonDocument<200> jsonDoc = graphSensorReading(sensor_data, data_size);
-
-    // Convert JSON object to string
-    String jsonString;
-    serializeJson(jsonDoc, jsonString);
-
-    // Send JSON string over WebSocket
-    ws.textAll(jsonString);
+    ws.textAll(datahandler.graphSensorReading(sensor_data, data_size));
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -120,7 +111,6 @@ void loop() {
   unsigned long currentMillis = millis();  // Get the current time
 
   if (currentMillis - previousMillis >= 1000) { //one second non-blocking delay
-    readPzem();
     notifyClients();
 
     previousMillis = currentMillis; 

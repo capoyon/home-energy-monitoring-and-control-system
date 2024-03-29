@@ -1,16 +1,22 @@
-#ifndef PZEM_H
-#define PZEM_H
+// pzem.h
+#ifndef PZEM_H_INCLUDED
+#define PZEM_H_INCLUDED
 
 #include <Arduino.h>
 #include <PZEM004Tv30.h>
 
-void readPzem();
+class Pzem {
+public:
+    Pzem(uint8_t rxPin, uint8_t txPin); // Constructor declaration with pin parameters
+    float voltage();
+    float current();
+    float power();
+    float energy();
+    float frequency();
+    float powerfactor();
+    
+private:
+    PZEM004Tv30 pzem;
+};
 
-extern float voltage;
-extern float current;
-extern float power;
-extern float energy;
-extern float frequency;
-extern float pf;
-
-#endif //PZEM_H
+#endif // PZEM_H_INCLUDED
