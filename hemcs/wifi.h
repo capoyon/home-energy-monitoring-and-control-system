@@ -2,11 +2,9 @@
 #define WIFI_H
 
 #include <WiFi.h>
-#include "datahandler.h"
 
+void startWifiAP(const char* ssid, const char* password);
+void connectToWifi(const char* ssid, const char* password);
 
-extern DataHandler datahandler;
-
-void initWifi();
 
 #endif //WIFI_H

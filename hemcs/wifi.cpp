@@ -1,6 +1,6 @@
 #include "wifi.h"
 
-DataHandler datahandler;
+
 
 
 void startWifiAP(const char* ssid, const char* password) {
@@ -26,9 +26,4 @@ void connectToWifi(const char* ssid, const char* password) {
   Serial.print("Local IP: ");
   // Print ESP Local IP Address
   Serial.println(WiFi.localIP());
-}
-
-void initWifi(){
-  startWifiAP(datahandler.getAPSsid(), datahandler.getAPPassword());
-  connectToWifi(datahandler.getWifiSSID(), datahandler.getWifiPassword());
 }

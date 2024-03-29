@@ -1,7 +1,14 @@
 #include "datahandler.h"
+#include <ArduinoJson.h> // Include ArduinoJson.h here if not already included
 
-// Function to save configuration to NVS
-void DataHandler::saveConfig(const Config& config) {
+// Define JSON_DOC_SIZE if not already defined
+#define JSON_DOC_SIZE 200
+
+DataHandler::DataHandler() {
+    loadConfig(); // Load configuration upon object creation
+}
+
+void DataHandler::saveConfig() {
     Preferences preferences;
     preferences.begin("config", false); // Open NVS namespace "config" in read-write mode
 
@@ -17,15 +24,19 @@ void DataHandler::saveConfig(const Config& config) {
     preferences.end(); // Close NVS
 }
 
-// Function to load configuration from NVS
-void DataHandler::loadConfig(Config& config) {
+void DataHandler::loadConfig() {
     Preferences preferences;
     preferences.begin("config", true); // Open NVS namespace "config" in read-only mode
 
-    config.wifi_ssid = strdup(preferences.getString("wifi_ssid", "WiFi").c_str());
-    config.wifi_password = strdup(preferences.getString("wifi_password", "password112233").c_str());
-    config.ap_ssid = strdup(preferences.getString("ap_ssid", "HEMCS").c_str());
-    config.ap_password = strdup(preferences.getString("ap_password", "password").c_str());
+    const char* default_wifi_ssid = "WiFi";
+    const char* default_wifi_password = "password112233";
+    const char* default_ap_ssid = "HEMCS";
+    const char* default_ap_password = "password";
+
+    config.wifi_ssid = strdup(preferences.getString("wifi_ssid", default_wifi_ssid).c_str());
+    config.wifi_password = strdup(preferences.getString("wifi_password", default_wifi_password).c_str());
+    config.ap_ssid = strdup(preferences.getString("ap_ssid", default_ap_ssid).c_str());
+    config.ap_password = strdup(preferences.getString("ap_password", default_ap_password).c_str());
     config.currency = preferences.getChar("currency", '₱');
     config.electric_rate = preferences.getFloat("electric_rate", 10.0);
     config.is24HourFormat = preferences.getBool("is24HourFormat", false);
@@ -34,22 +45,18 @@ void DataHandler::loadConfig(Config& config) {
     preferences.end(); // Close NVS
 }
 
-// Constructor definition
-DataHandler::DataHandler() {
-    Config config; // Creating a config object to pass to loadConfig
-    loadConfig(config); // Load configuration upon object creation
-}
 
-// Format the sensor data for sending it in overview web
-String DataHandler::graphSensorReading(float sensor_data[], size_t data_size) {
+char* DataHandler::graphSensorReading(float sensor_data[], size_t data_size) {
     const uint8_t cmd = 2;
-    StaticJsonDocument<200> root;
+    StaticJsonDocument<JSON_DOC_SIZE> root; // Use a constant for JSON_DOC_SIZE
     root["cmd"] = cmd;
     JsonArray arr = root.createNestedArray("data");
     for (size_t i = 0; i < data_size; i++) {
         arr.add(sensor_data[i]);
     }
-    String return_val;
-    serializeJson(root, return_val);
+    char* return_val = (char*)malloc(JSON_DOC_SIZE); // Allocate memory for JSON string
+    if (return_val) {
+        serializeJson(root, return_val, JSON_DOC_SIZE);
+    }
     return return_val;
 }

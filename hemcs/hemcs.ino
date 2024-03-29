@@ -1,72 +1,23 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+
+#include "datahandler.h"
 #include "wifi.h"
 #include "html.h"
 #include "pzem.h"
+#include "websocket.h"
 
-bool ledState = 0;
-const int ledPin = 2;
-
-// Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+
+DataHandler datahandler;
+
+float sensor_data[7];
+String socket_data;
 Pzem pzem(16,17);
 
 
-void notifyClients() {
- // Sample sensor data
-    float sensor_data[] = {pzem.voltage(), pzem.current(), pzem.power(), pzem.energy(), pzem.frequency(), pzem.powerfactor(), 0.12};
-    size_t data_size = sizeof(sensor_data)/sizeof(sensor_data[0]);
-    ws.textAll(datahandler.graphSensorReading(sensor_data, data_size));
-}
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
-  AwsFrameInfo *info = (AwsFrameInfo*)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
-    data[len] = 0;
-    if (strcmp((char*)data, "toggle") == 0) {
-      ledState = !ledState;
-      notifyClients();
-    }
-  }
-}
-
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-             void *arg, uint8_t *data, size_t len) {
-  switch (type) {
-    case WS_EVT_CONNECT:
-      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-      break;
-    case WS_EVT_DISCONNECT:
-      Serial.printf("WebSocket client #%u disconnected\n", client->id());
-      break;
-    case WS_EVT_DATA:
-      handleWebSocketMessage(arg, data, len);
-      break;
-    case WS_EVT_PONG:
-    case WS_EVT_ERROR:
-      break;
-  }
-}
-
-void initWebSocket() {
-  ws.onEvent(onEvent);
-  server.addHandler(&ws);
-}
-
-String processor(const String& var){
-  Serial.println(var);
-  if(var == "STATE"){
-    if (ledState){
-      return "ON";
-    }
-    else{
-      return "OFF";
-    }
-  }
-  return String();
-}
 
 void setup(){
   // Serial port for debugging purposes
@@ -75,10 +26,12 @@ void setup(){
   Serial.println("");
   Serial.println("");
   
-  initWifi();
+  //connect to wifi and start hotspot
+  startWifiAP(datahandler.getAPSsid(), datahandler.getAPPassword());
+  connectToWifi(datahandler.getWifiSSID(), datahandler.getWifiPassword());
 
   initWebSocket();
-
+  server.addHandler(&ws);
   // html route for request
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", overview_html, overview_html_len);
@@ -100,21 +53,28 @@ void setup(){
     request->send_P(200, "text/html", settings_html, settings_html_len);
   });
 
-  // Start server
   server.begin();
 }
 
-
-unsigned long previousMillis = 0; // for non-blocking delay
+unsigned long previousMillis = 0;
 
 void loop() {
-  unsigned long currentMillis = millis();  // Get the current time
+  unsigned long currentMillis = millis();  
 
-  if (currentMillis - previousMillis >= 1000) { //one second non-blocking delay
-    notifyClients();
-
+  if (currentMillis - previousMillis >= 1000) {
+    // get the sensor data and send it to websocket
+    sensor_data[0] = pzem.voltage();
+    sensor_data[1] = pzem.current();
+    sensor_data[2] = pzem.power();
+    sensor_data[3] = pzem.energy();
+    sensor_data[4] = pzem.frequency();
+    sensor_data[5] = pzem.powerfactor();
+    sensor_data[6] = 0.12;
+    socket_data = datahandler.graphSensorReading( sensor_data, 7);
+    Serial.println(socket_data);
+    notifyClients(socket_data);
     previousMillis = currentMillis; 
   }
+  
   ws.cleanupClients();
-  digitalWrite(ledPin, ledState);
 }
