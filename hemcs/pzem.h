@@ -6,7 +6,10 @@
 #include <PZEM004Tv30.h>
 
 class Pzem {
-public:
+  private:
+    PZEM004Tv30 pzem;
+
+  public:
     Pzem(uint8_t rxPin, uint8_t txPin); // Constructor declaration with pin parameters
     float voltage();
     float current();
@@ -15,8 +18,6 @@ public:
     float frequency();
     float powerfactor();
     
-private:
-    PZEM004Tv30 pzem;
 };
 
 #endif // PZEM_H_INCLUDED

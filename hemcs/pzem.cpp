@@ -1,7 +1,7 @@
 #include "pzem.h"
 
 Pzem::Pzem(uint8_t rxPin, uint8_t txPin) : pzem(Serial2, rxPin, txPin) {
-    // Constructor definition with initialization of PZEM004Tv30 object
+    Serial.println("Initializing Pzem");
 }
 
 float Pzem::voltage() {

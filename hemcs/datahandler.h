@@ -1,60 +1,66 @@
 #ifndef DATAHANDLER_H
 #define DATAHANDLER_H
 
-#include <ArduinoJson.h>
 #include <Preferences.h>
+#include <ArduinoJson.h>
+#include "wifi.h"
+
 
 class DataHandler {
 private:
-    struct Config {
-        char* wifi_ssid;
-        char* wifi_password;
-        char* ap_ssid;
-        char* ap_password;
-        char currency;
-        float electric_rate;
-        bool is24HourFormat;
-        bool isAutoSetTime;
-    };
+    Preferences preferences;
 
-    Config config;
+    char* wifi_ssid;
+    char* wifi_password;
+    char* ap_ssid;
+    char* ap_password;
+    uint8_t currency;
+    float electric_rate;
+    bool is24HourFormat;
+    bool isAutoSetTime;
+
+    char buffer[512];
+
+    void changeAP(const char* name, const char* pass);
 
 public:
-    DataHandler(); // Constructor declaration
+    void init();
     void saveConfig();
     void loadConfig();
     char* getWifiSSID() {
-        return config.wifi_ssid;
+        return wifi_ssid;
     }
 
+    char* getSettingsJSON();
+
+    void handleSocketCommand(const char *command);
+
     char* getWifiPassword() {
-        return config.wifi_password;
+        return wifi_password;
     }
 
     char* getAPSsid() {
-        return config.ap_ssid;
+        return ap_ssid;
     }
 
     char* getAPPassword() {
-        return config.ap_password;
+        return ap_password;
     }
 
     char getCurrency() {
-        return config.currency;
+        return currency;
     }
 
     float getElectricRate() {
-        return config.electric_rate;
+        return electric_rate;
     }
     bool getIs24HourFormat() {
-        return config.is24HourFormat;
+        return is24HourFormat;
     }
 
     bool getIsAutoSetTime() {
-        return config.isAutoSetTime;
+        return isAutoSetTime;
     }
-    char* graphSensorReading(float sensor_data[], size_t data_size);
-
 };
 
 #endif //DATAHANDLER_H

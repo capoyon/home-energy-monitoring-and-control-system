@@ -1,25 +1,43 @@
 #include "datahandler.h"
-#include <ArduinoJson.h> // Include ArduinoJson.h here if not already included
 
-// Define JSON_DOC_SIZE if not already defined
-#define JSON_DOC_SIZE 200
+#define JSON_BUFFER_SIZE 256 // Adjust this buffer size as needed
 
-DataHandler::DataHandler() {
-    loadConfig(); // Load configuration upon object creation
+
+
+
+// Private
+void DataHandler::changeAP(const char* name, const char* pass) {
+    preferences.begin("config", false); // Open NVS namespace "config" in read-write mode
+
+    preferences.putString("ap_ssid", name);
+    preferences.putString("ap_password", pass);
+
+    preferences.end(); // Close NVS
+    startWifiAP(getAPSsid(), getAPPassword());
+    Serial.printf("AP updated, name: %s, password: %s", name, pass);
+}
+
+
+
+// public
+
+void DataHandler::init() {
+  Serial.print("Initializing Preference: ");
+  loadConfig(); // Load configuration upon object creation
+  Serial.println("Done");
 }
 
 void DataHandler::saveConfig() {
-    Preferences preferences;
     preferences.begin("config", false); // Open NVS namespace "config" in read-write mode
 
-    preferences.putString("wifi_ssid", config.wifi_ssid);
-    preferences.putString("wifi_password", config.wifi_password);
-    preferences.putString("ap_ssid", config.ap_ssid);
-    preferences.putString("ap_password", config.ap_password);
-    preferences.putChar("currency", config.currency);
-    preferences.putFloat("electric_rate", config.electric_rate);
-    preferences.putBool("is24HourFormat", config.is24HourFormat);
-    preferences.putBool("isAutoSetTime", config.isAutoSetTime);
+    preferences.putString("wifi_ssid", wifi_ssid);
+    preferences.putString("wifi_password", wifi_password);
+    preferences.putString("ap_ssid", ap_ssid);
+    preferences.putString("ap_password", ap_password);
+    preferences.putChar("currency", currency);
+    preferences.putFloat("electric_rate", electric_rate);
+    preferences.putBool("is24HourFormat", is24HourFormat);
+    preferences.putBool("isAutoSetTime", isAutoSetTime);
 
     preferences.end(); // Close NVS
 }
@@ -33,30 +51,49 @@ void DataHandler::loadConfig() {
     const char* default_ap_ssid = "HEMCS";
     const char* default_ap_password = "password";
 
-    config.wifi_ssid = strdup(preferences.getString("wifi_ssid", default_wifi_ssid).c_str());
-    config.wifi_password = strdup(preferences.getString("wifi_password", default_wifi_password).c_str());
-    config.ap_ssid = strdup(preferences.getString("ap_ssid", default_ap_ssid).c_str());
-    config.ap_password = strdup(preferences.getString("ap_password", default_ap_password).c_str());
-    config.currency = preferences.getChar("currency", '₱');
-    config.electric_rate = preferences.getFloat("electric_rate", 10.0);
-    config.is24HourFormat = preferences.getBool("is24HourFormat", false);
-    config.isAutoSetTime = preferences.getBool("isAutoSetTime", true);
+    wifi_ssid = strdup(preferences.getString("wifi_ssid", default_wifi_ssid).c_str());
+    wifi_password = strdup(preferences.getString("wifi_password", default_wifi_password).c_str());
+    ap_ssid = strdup(preferences.getString("ap_ssid", default_ap_ssid).c_str());
+    ap_password = strdup(preferences.getString("ap_password", default_ap_password).c_str());
+    currency = preferences.getChar("currency", 1);
+    electric_rate = preferences.getFloat("electric_rate", 10.0);
+    is24HourFormat = preferences.getBool("is24HourFormat", false);
+    isAutoSetTime = preferences.getBool("isAutoSetTime", true);
 
     preferences.end(); // Close NVS
 }
 
 
-char* DataHandler::graphSensorReading(float sensor_data[], size_t data_size) {
-    const uint8_t cmd = 2;
-    StaticJsonDocument<JSON_DOC_SIZE> root; // Use a constant for JSON_DOC_SIZE
-    root["cmd"] = cmd;
-    JsonArray arr = root.createNestedArray("data");
-    for (size_t i = 0; i < data_size; i++) {
-        arr.add(sensor_data[i]);
-    }
-    char* return_val = (char*)malloc(JSON_DOC_SIZE); // Allocate memory for JSON string
-    if (return_val) {
-        serializeJson(root, return_val, JSON_DOC_SIZE);
-    }
-    return return_val;
+
+char* DataHandler::getSettingsJSON() {
+    sprintf(buffer, "{\"sta\":\"%s\", \"sta_p\":\"%s\", \"ap\":\"%s\",\"ap_p\":\"%s\", \"cur\":\"%d\",\"rate\":%f,\"t_format\":%d,\"t_auto\":%d}",
+    wifi_ssid, wifi_password, ap_ssid, ap_password, currency, electric_rate, is24HourFormat, isAutoSetTime);
+    return buffer;
+}
+
+
+void DataHandler::handleSocketCommand(const char *command) {
+  Serial.printf("Processing: %s", command);
+  int opcode;
+  char *token;
+  char *data1;
+  char *data2;
+
+  // Parse opcode
+  char opcode_str[3];
+  strncpy(opcode_str, command, 2);
+  opcode_str[2] = '\0';
+  opcode = atoi(opcode_str);
+
+  switch(opcode){
+    case 2: //change wifi hotspot
+        token = strtok((char *)command + 2, ":=:"); // Skip first two characters (opcode)
+        data1 = strdup(token); //name
+        token = strtok(NULL, ":=:"); // Get the next token
+        data2 = strdup(token); //password
+        changeAP(data1, data2);
+    break;
+    default:
+      Serial.println("Error: Invalid OP code");
+  }
 }

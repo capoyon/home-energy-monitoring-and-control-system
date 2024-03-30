@@ -21,6 +21,8 @@
             top: 0;
             left: 0;
             z-index: 1;
+            height: 70px;
+            background-color: #f4f4f4;
         }
     
         #title-bar a {
@@ -92,8 +94,7 @@
             border: 1px solid #999;
             font-size: large;
         }
-
-        /* Default styles */
+        
         .switch {
             position: absolute;
             right: 0;
@@ -193,21 +194,21 @@
     <div id="content">
 
             <h2>Settings</h2>
-            <div class="card" id="wifi">Wi-Fi <div class="subcard">Wifi</div></div>
-            <div class="card" id="hotspot">Hotspot<div class="subcard">HEMCS: password123</div></div>
-            <div class="card" id="currency">Currency<select id="currencySelect">
+            <div class="card" id="wifi">Wi-Fi <div><span id="sta">...</span>:<span id="sta_p">...</span></div></div>
+            <div class="card" id="hotspot">Hotspot<div><span id="ap">...</span>:<span id="ap_p">...</span></div></div>
+            <div class="card">Currency<select id="currency">
                 <option value="₱">₱</option>
                 <option value="$">$</option>
                 <option value="€">€</option>
                 <option value="£">£</option>
                 <option value="¥">¥</option>
               </select></div>
-            <div class="card" id="electric-rate">Electricity rate<div class="subcard">₱12.23/kWh</div></div>
-            <div class="card">24 hour time format<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="output"><span class="slider"></span></label></div>
-            <div class="card">Set time automatically<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="output"><span class="slider"></span></label></div>
+            <div class="card" id="electric-rate">Electricity rate<div><span id="rate_cur"></span><span id="rate">...</span>/kWh</div></div>
+            <div class="card">24 hour time format<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="is24h"><span class="slider"></span></label></div>
+            <div class="card">Set time automatically<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="auto_t"><span class="slider"></span></label></div>
     </div>
     <script>
-        var gateway = `ws://${window.location.hostname}/ws`;
+        var gateway = `ws://${window.location.hostname}/settings`;
         var websocket;
         window.addEventListener('load', onLoad);
         function initWebSocket() {
@@ -217,6 +218,9 @@
             websocket.onclose = onClose;
             websocket.onmessage = onMessage; 
         }
+        function onLoad(event) {
+            initWebSocket();
+        }
         function onOpen(event) {
             console.log('Connection opened');
         }
@@ -225,28 +229,18 @@
             setTimeout(initWebSocket, 2000);
         }
         function onMessage(event) {
-            var state;
-            console.log(event.data);
-            if (event.data == "1") {
-                state = "ON";
-            }
-            else {
-                state = "OFF";
-            }
-            document.getElementById('state').innerHTML = state;
+            data = JSON.parse(event.data);
+            console.log(data);
+            document.getElementById("sta").innerHTML = data.sta;
+            document.getElementById("sta_p").innerHTML = data.sta_p;
+            document.getElementById("ap").innerHTML = data.ap;
+            document.getElementById("ap_p").innerHTML = data.ap_p;
+            document.getElementById("currency").selectedIndex = data.cur;
+            document.getElementById("rate_cur").innerHTML = document.getElementById("currency").value;
+            document.getElementById("rate").innerHTML = data.rate;
+            document.getElementById("is24h").checked = !!data.t_format;
+            document.getElementById("auto_t").checked = !!data.t_auto;
         }
-        function onLoad(event) {
-            initWebSocket();
-            initButton();
-        }
-        function initButton() {
-            document.getElementById('button').addEventListener('click', toggle);
-        }
-        function toggle(val) {
-            websocket.send(val);
-        }
-
-
 
     document.getElementById('electric-rate').addEventListener('click', function() {
     var input;
@@ -265,65 +259,77 @@
             alert('Invalid input.');
         }
     } while (true);
-    alert('Electricity rate updated successfully!\nRate: ₱' + floatValue + " per kWh");
-});
+        alert('Electricity rate updated successfully!\nRate: ₱' + floatValue + " per kWh");
+    });
 
 
-document.getElementById('wifi').addEventListener('click', function() {
-    // Regular expression to validate WiFi SSID
+    document.getElementById('wifi').addEventListener('click', function() {
     var ssidRegex = /^[A-Za-z0-9_ -]{1,32}$/;
-
-    // Regular expression to validate WiFi password (minimum 8 characters)
     var passwordRegex = /^.{8,}$/;
-
     var ssid = prompt('Enter WiFi Name:');
-
-    if (ssid !== null) { // Check if user hasn't cancelled the SSID prompt
+    if (ssid !== null) {
         if (!ssidRegex.test(ssid)) { // Check if SSID matches the pattern
             alert('Invalid WiFi name. Please enter up to 32 characters, using only alphanumeric characters, _, - and space.');
-            return; // Exit the function
+            return; 
         }
 
         var password = prompt('Enter WiFi Password:');
 
-        if (password !== null) { // Check if user hasn't cancelled the password prompt
-            if (!passwordRegex.test(password)) { // Check if password matches the pattern
+        if (password !== null) { 
+            if (!passwordRegex.test(password)) { 
                 alert('Invalid WiFi password. Password must be at least 8 characters long.');
-                return; // Exit the function
+                return; 
             }
-
+            updateSettings(40, {"ssid": ssid, "pass": password});
             alert('Wi-Fi updated successfully!\nName: ' + ssid + '\nPassword: ' + password);
         }
     }
 });
 
 document.getElementById('hotspot').addEventListener('click', function() {
-    // Regular expression to validate WiFi SSID
-    var ssidRegex = /^[A-Za-z0-9_ -]{1,32}$/;
+    var ssidRegex = /^[A-Za-z0-9_ -]{1,10}$/;
+    var passwordRegex = /^.{8,10}$/;
 
-    // Regular expression to validate WiFi password (minimum 8 characters)
-    var passwordRegex = /^.{8,}$/;
-
-    var ssid = prompt('Enter Hotspot SSID (up to 32 characters, only alphanumeric, _, - and space allowed):');
+    var ssid = prompt('Enter Hotspot Name (up to 10 characters):');
 
     if (ssid !== null) { // Check if user hasn't cancelled the SSID prompt
         if (!ssidRegex.test(ssid)) { // Check if SSID matches the pattern
-            alert('Invalid Hotspot SSID. Please enter up to 32 characters, using only alphanumeric characters, _, - and space.');
+            alert('Invalid Hotspot Name. Please enter up to 10 characters, using only alphanumeric characters, _, - and space.');
             return; // Exit the function
         }
 
-        var password = prompt('Enter WiFi Password (at least 8 characters):');
+        var password = prompt('Enter WiFi Password (at least 8 and up to 10 characters):');
 
         if (password !== null) { // Check if user hasn't cancelled the password prompt
             if (!passwordRegex.test(password)) { // Check if password matches the pattern
                 alert('Invalid Hotspot password. Password must be at least 8 characters long.');
                 return; // Exit the function
             }
-
+            websocket.send("02"+ssid+":=:"+password);
             alert('Hotspot updated successfully!\nName: ' + ssid + '\nPassword: ' + password);
         }
     }
 });
+
+function updateSettings(cmd, data) {
+    try {
+        var command = {
+            cmd: cmd,
+            data: data
+        };
+        var socket_data = JSON.stringify(command);
+        console.log(socket_data);
+
+        if (websocket.readyState === websocket.OPEN) {
+            websocket.send(socket_data);
+        } else {
+            console.error('Websocket connection is not open.');
+        }
+    } catch (error) {
+        console.error('Error sending data over websocket:', error);
+    }
+}
+
 </script>
 </body>
 </html>

@@ -8,12 +8,8 @@
 #include "pzem.h"
 #include "websocket.h"
 
-AsyncWebServer server(80);
-
-DataHandler datahandler;
-
+AsyncWebServer server(80); // port for webserver
 float sensor_data[7];
-String socket_data;
 Pzem pzem(16,17);
 unsigned long previousMillis = 0;
 
@@ -26,7 +22,7 @@ void setup(){
   Serial.println("");
   Serial.println("");
   Serial.println("");
-  
+  datahandler.init();
   //connect to wifi and start hotspot
   startWifiAP(datahandler.getAPSsid(), datahandler.getAPPassword());
   connectToWifi(datahandler.getWifiSSID(), datahandler.getWifiPassword());
@@ -48,18 +44,20 @@ void loop() {
     sensor_data[4] = pzem.frequency();
     sensor_data[5] = pzem.powerfactor();
     sensor_data[6] = 0.12;
-    socket_data = datahandler.graphSensorReading( sensor_data, 7);
-    Serial.println(socket_data);
-    notifyClients(socket_data);
+    //Serial.println(socket_data);
+    
+    updateOverview(sensor_data, 7);
+    void cleanupClients();
     previousMillis = currentMillis; 
   }
-  
-  ws.cleanupClients();
 }
 
 
 void initWebServer() {
-  server.addHandler(&ws);
+  //socket connections
+  server.addHandler(&overview);
+  server.addHandler(&settings);
+
   // html route for request
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", overview_html, overview_html_len);
