@@ -1,9 +1,6 @@
 #include "datahandler.h"
 
-#define JSON_BUFFER_SIZE 256 // Adjust this buffer size as needed
-
-
-
+Pzem pzem(16,17);
 
 // Private
 void DataHandler::changeAP(const char* name, const char* pass) {
@@ -16,8 +13,6 @@ void DataHandler::changeAP(const char* name, const char* pass) {
     startWifiAP(getAPSsid(), getAPPassword());
     Serial.printf("AP updated, name: %s, password: %s", name, pass);
 }
-
-
 
 // public
 
@@ -64,6 +59,21 @@ void DataHandler::loadConfig() {
 }
 
 
+char* DataHandler::getSensorDataJSON() {
+    float sensor_data[7];
+    sensor_data[0] = pzem.voltage();
+    sensor_data[1] = pzem.current();
+    sensor_data[2] = pzem.power();
+    sensor_data[3] = pzem.energy();
+    sensor_data[4] = pzem.frequency();
+    sensor_data[5] = pzem.powerfactor();
+    sensor_data[6] = 0.12;
+    sprintf(buffer, "{\"data\": [%f, %f, %f, %f, %f, %f, %f]}",
+            sensor_data[0], sensor_data[1], sensor_data[2], 
+            sensor_data[3], sensor_data[4], sensor_data[5], 
+            sensor_data[6]);
+    return buffer;
+}
 
 char* DataHandler::getSettingsJSON() {
     sprintf(buffer, "{\"sta\":\"%s\", \"sta_p\":\"%s\", \"ap\":\"%s\",\"ap_p\":\"%s\", \"cur\":\"%d\",\"rate\":%f,\"t_format\":%d,\"t_auto\":%d}",

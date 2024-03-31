@@ -4,10 +4,13 @@
 #include <Preferences.h>
 #include <ArduinoJson.h>
 #include "wifi.h"
+#include "pzem.h"
+
 
 
 class DataHandler {
 private:
+
     Preferences preferences;
 
     char* wifi_ssid;
@@ -31,7 +34,10 @@ public:
         return wifi_ssid;
     }
 
+
+    char* getSensorDataJSON();
     char* getSettingsJSON();
+
 
     void handleSocketCommand(const char *command);
 

@@ -5,16 +5,12 @@
 #include "datahandler.h"
 #include "wifi.h"
 #include "html.h"
-#include "pzem.h"
 #include "websocket.h"
 
 AsyncWebServer server(80); // port for webserver
-float sensor_data[7];
-Pzem pzem(16,17);
 unsigned long previousMillis = 0;
 
 void initWebServer();
-
 
 void setup(){
   // Serial port for debugging purposes
@@ -36,18 +32,8 @@ void loop() {
   unsigned long currentMillis = millis();  
 
   if (currentMillis - previousMillis >= 1000) {
-    // get the sensor data and send it to websocket
-    sensor_data[0] = pzem.voltage();
-    sensor_data[1] = pzem.current();
-    sensor_data[2] = pzem.power();
-    sensor_data[3] = pzem.energy();
-    sensor_data[4] = pzem.frequency();
-    sensor_data[5] = pzem.powerfactor();
-    sensor_data[6] = 0.12;
-    //Serial.println(socket_data);
-    
-    updateOverview(sensor_data, 7);
-    void cleanupClients();
+    cleanupClients();
+    updateOverview();
     previousMillis = currentMillis; 
   }
 }

@@ -11,22 +11,8 @@ AsyncWebSocket settings("/settings");
 bool ledState = 0;
 const int ledPin = 2;
 
-void updateOverview(float sensor_data[], size_t data_size) {
-    const uint8_t cmd = 2;
-    StaticJsonDocument<JSON_DOC_SIZE> root; // Use a constant for JSON_DOC_SIZE
-    root["cmd"] = cmd;
-    JsonArray arr = root.createNestedArray("data");
-    for (size_t i = 0; i < data_size; i++) {
-        arr.add(sensor_data[i]);
-    }
-    char* data = (char*)malloc(JSON_DOC_SIZE); // Allocate memory for JSON string
-    if (data) {
-      serializeJson(root, data, JSON_DOC_SIZE);
-      overview.textAll(data);
-    } else {
-      Serial.println("Error: unable to allocate memory updateOverview()");
-    }
-    free(data);
+void updateOverview() {
+    overview.textAll(datahandler.getSensorDataJSON());
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {

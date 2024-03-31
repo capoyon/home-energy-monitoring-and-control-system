@@ -164,25 +164,10 @@
     }
     function onMessage(event) {
         console.log(event.data);
-
         var jsonObject = JSON.parse(event.data);
-        var cmd = jsonObject.cmd;
         var httpdata = jsonObject.data;
-   
-        switch (cmd) {
-        case 1:
-            console.log("Command 1 executed");
-            break;
-        case 2:
-            console.log("Command 2 executed");
-            graphSensorData(httpdata);
-            break;
-        case 3:
-            console.log("Command 3 executed");
-            break;
-        default:
-            console.log("Unknown command");
-        }
+        graphSensorData(httpdata);
+
     }
     function onLoad(event) {
         initWebSocket();
