@@ -83,6 +83,27 @@
             pointer-events: none;
         }
     
+        .card-grid {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+        .card {
+            text-align: center;
+            background-color: white;
+            box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+        }
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #034078
+        }
+        .reading {
+            font-size: 1.2rem;
+            color: #1282A2;
+        }
         @media screen and (max-width: 600px) {
             #w {
                 display: none;
@@ -140,12 +161,24 @@
 
     <div id="content">
         <h2>Usage Overview</h2>
+        <div class="card-grid">
+            <div class="card">
+                <p class="card-title"><i class="fas fa-thermometer-threequarters" style="color:#059e8a;"></i> Energy Usage</p>
+                <p class="reading"><span id="energy">...</span> Kilowatt-hour ≈ <span class="currency">P</span><span id="kwh_amount">...</span></p>
+            </div>
+            <div class="card">
+                <p class="card-title"><i class="fas fa-thermometer-threequarters" style="color:#059e8a;"></i>Instantenous Power</p>
+                <p class="reading"><span id="power">...</span> Watt ≈ <span class="currency">P</span><span id="w_amount">...</span>/hour</p>
+            </div>
+        </div>
+        <h2>Live Graph</h2>
     </div>
 </body>
 <script>
     var data = [];
 
-    var gateway = `ws://${window.location.hostname}/overview`;
+    // var gateway = `ws://${window.location.hostname}/overview`;
+    var gateway = `ws://192.168.10.128/overview`;
     var websocket;
     window.addEventListener('load', onLoad);
     function initWebSocket() {
@@ -248,25 +281,33 @@
             var lgTotalId = `lg${i}_total`;
             var lgId = `lg${i}`;
             console.log(i);
-            if(i === 0){
-                appendLiveGraphToContent("Voltage", 'kW', lgTotalId, lgId);
-            } else if(i === 1){
-                appendLiveGraphToContent("Current", 'A', lgTotalId, lgId);
-            } else if(i === 2){
-                appendLiveGraphToContent("Power", 'W', lgTotalId, lgId);
-            } else if(i === 3){
-                appendLiveGraphToContent("Energy", 'kWh', lgTotalId, lgId);
-            } else if(i === 4){
-                appendLiveGraphToContent("Frequency", 'Hz', lgTotalId, lgId);
-            } else if(i === 5){
-                appendLiveGraphToContent("Power Factor", '', lgTotalId, lgId);
-            } else if(i === 6){
-                appendUsageToContent(data[i]);
+            switch (i) {
+                case 0:
+                    appendLiveGraphToContent("Voltage", 'V', lgTotalId, lgId);
+                    break;
+                case 1:
+                    appendLiveGraphToContent("Current", 'A', lgTotalId, lgId);
+                    break;
+                case 2:
+                    appendLiveGraphToContent("Power", 'W', lgTotalId, lgId);
+                    break;
+                case 3:
+                    appendLiveGraphToContent("Energy", 'kWh', lgTotalId, lgId);
+                    break;
+                case 4:
+                    appendLiveGraphToContent("Frequency", 'Hz', lgTotalId, lgId);
+                    break;
+                case 5:
+                    appendLiveGraphToContent("Power Factor", '', lgTotalId, lgId);
+                    break;
+                case 6:
+                    appendUsageToContent(data[i]);
+                    break;
+                default:
+                    console.log("Others");
+                    appendLiveGraphToContent("title", "Unit", lgTotalId, lgId);
             }
-            else {
-                console.log("Others");
-                appendLiveGraphToContent("title", "Unit", lgTotalId, lgId);
-            }
+
         }
         resizeCanvas();
     }
@@ -278,8 +319,10 @@
             lines[i].append(Date.now(), data[i]);
             changeElementVal(data[i],`lg${i}_total`);
         }
-        changeElementVal(data[2],"usage")
-        changeElementVal(data[2]*18,"usage-amount")
+        changeElementVal(data[0],"energy")
+        changeElementVal(data[0]*18,"kwh_amount")
+        changeElementVal(data[1],"power")
+        changeElementVal(data[1]*18/1000,"w_amount")
     }
 
     function getRandomColor() {

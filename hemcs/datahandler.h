@@ -22,6 +22,10 @@ private:
     bool is24HourFormat;
     bool isAutoSetTime;
 
+
+    // for automation
+    
+
     char buffer[512];
 
     void changeAP(const char* name, const char* pass);

@@ -60,18 +60,16 @@ void DataHandler::loadConfig() {
 
 
 char* DataHandler::getSensorDataJSON() {
-    float sensor_data[7];
-    sensor_data[0] = pzem.voltage();
-    sensor_data[1] = pzem.current();
-    sensor_data[2] = pzem.power();
-    sensor_data[3] = pzem.energy();
+    float sensor_data[6];
+    sensor_data[0] = pzem.energy();
+    sensor_data[1] = pzem.power();
+    sensor_data[2] = pzem.voltage();
+    sensor_data[3] = pzem.current();
     sensor_data[4] = pzem.frequency();
     sensor_data[5] = pzem.powerfactor();
-    sensor_data[6] = 0.12;
-    sprintf(buffer, "{\"data\": [%f, %f, %f, %f, %f, %f, %f]}",
+    sprintf(buffer, "{\"data\": [%f, %f, %f, %f, %f, %f]}",
             sensor_data[0], sensor_data[1], sensor_data[2], 
-            sensor_data[3], sensor_data[4], sensor_data[5], 
-            sensor_data[6]);
+            sensor_data[3], sensor_data[4], sensor_data[5]);
     return buffer;
 }
 
