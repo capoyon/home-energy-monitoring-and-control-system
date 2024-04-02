@@ -175,177 +175,172 @@
     </div>
 </body>
 <script>
-    var data = [];
+var data = [];
+var lines = [];
+var isTableInit = false;
 
-    // var gateway = `ws://${window.location.hostname}/overview`;
-    var gateway = `ws://192.168.10.128/overview`;
-    var websocket;
-    window.addEventListener('load', onLoad);
-    function initWebSocket() {
-        console.log('Trying to open a WebSocket connection...');
-        websocket = new WebSocket(gateway);
-        websocket.onopen = onOpen;
-        websocket.onclose = onClose;
-        websocket.onmessage = onMessage; 
+window.addEventListener('load', onLoad);
+
+var gateway = `ws://192.168.10.128/overview`;
+var websocket;
+
+function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen = onOpen;
+    websocket.onclose = onClose;
+    websocket.onmessage = onMessage; 
+}
+
+function onOpen(event) {
+    console.log('Connection opened');
+}
+
+function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
+
+function onMessage(event) {
+    console.log(event.data);
+    var jsonObject = JSON.parse(event.data);
+    var httpdata = jsonObject.data;
+    graphSensorData(httpdata);
+}
+
+function onLoad(event) {
+    initWebSocket();
+}
+
+function graphSensorData(httpdata) {
+    data = httpdata;
+    if (!isTableInit) {
+        initLiveGraph(data);
+        isTableInit = true;
     }
-    function onOpen(event) {
-        console.log('Connection opened');
-    }
-    function onClose(event) {
-        console.log('Connection closed');
-        setTimeout(initWebSocket, 2000);
-    }
-    function onMessage(event) {
-        console.log(event.data);
-        var jsonObject = JSON.parse(event.data);
-        var httpdata = jsonObject.data;
-        graphSensorData(httpdata);
+    console.log(data);
+    addLiveGraph();
+}
 
-    }
-    function onLoad(event) {
-        initWebSocket();
-    }
-    /*front end manipulation funcitons*/
-    var lines = [];
-    var isTableInit = false;
-    function graphSensorData(httpdata) {
-        data = httpdata;
-        if (!isTableInit) {
-            initLiveGraph(data);
-            isTableInit = true;
-        }
-        console.log(data);
-        addLiveGraph();
-    }
+function appendLiveGraphToContent(lgTitle, unit, lgTotalId, lgId) {
+    var liveGraphDiv = document.createElement('div');
+    liveGraphDiv.id = 'live-graph';
 
-    function changeElementVal(newVal, id) {
-        var element = document.getElementById(id);
-        element.innerText = newVal.toFixed(2);
-    }
+    var htmlContent = `
+        <p>${lgTitle}: <span id="${lgTotalId}">12</span> ${unit}</p>
+        <canvas id="${lgId}" class="LiveGraph" width="500" height="100" style="cursor: e-resize; border: 1px solid rgb(124, 123, 123); border-radius: 4px;"></canvas>
+    `;
 
-    function appendLiveGraphToContent(lgTitle, unit, lgTotalId, lgId) {
-        var liveGraphDiv = document.createElement('div');
-        liveGraphDiv.id = 'live-graph';
+    liveGraphDiv.innerHTML = htmlContent;
+    var contentDiv = document.getElementById('content');
+    contentDiv.appendChild(liveGraphDiv);
 
-        var htmlContent = `
-            <p>${lgTitle}: <span id="${lgTotalId}">12</span> ${unit}</p>
-            <canvas id="${lgId}" class="LiveGraph" width="500" height="100" style="cursor: e-resize; border: 1px solid rgb(124, 123, 123); border-radius: 4px;"></canvas>
-        `;
+    var newLine = new TimeSeries();
+    lines.push(newLine);
 
-        liveGraphDiv.innerHTML = htmlContent;
-        var contentDiv = document.getElementById('content');
-        contentDiv.appendChild(liveGraphDiv);
+    var newSmoothieChart = new SmoothieChart({
+        grid: {
+            strokeStyle: 'rgb(0, 0, 0,0.5)',
+            fillStyle: 'rgb(255, 255, 255)',
+            lineWidth: 1,
+            millisPerLine: 250,
+            verticalSections: 6
+        },
+        labels: {
+            fillStyle: 'rgb(0, 0, 0)'
+        },
+        tooltip: true,
+    });
+    var color = getRandomColor();
+    newSmoothieChart.addTimeSeries(newLine, {
+        strokeStyle: color,
+        fillStyle: color+'50',
+        lineWidth: 1
+    });
 
-        var newLine = new TimeSeries();
-        lines.push(newLine);
-    
-        var newSmoothieChart = new SmoothieChart({
-            grid: {
-                strokeStyle: 'rgb(0, 0, 0,0.5)',
-                fillStyle: 'rgb(255, 255, 255)',
-                lineWidth: 1,
-                millisPerLine: 250,
-                verticalSections: 6
-            },
-            labels: {
-                fillStyle: 'rgb(0, 0, 0)'
-            },
-            tooltip: true,
-        });
-        var color = getRandomColor();
-        newSmoothieChart.addTimeSeries(newLine, {
-            strokeStyle: color,
-            fillStyle: color+'50',
-            lineWidth: 1
-        });
+    newSmoothieChart.streamTo(document.getElementById(lgId), 1000);
+}
 
-        newSmoothieChart.streamTo(document.getElementById(lgId), 1000);
-    }
-
-    function appendUsageToContent(usage) {
-        var textDiv = document.createElement('div');
-        textDiv.id = 'usage-history';
-
-        var htmlContent = `
-            <p>January: <span id="usage">${usage}</span> kWh = &#8369;<span id="usage-amount">${usage*18}</span> </p>
-        `;
-
-        textDiv.innerHTML = htmlContent;
-        var contentDiv = document.getElementById('content');
-        contentDiv.appendChild(textDiv);
-    }
-
-    function initLiveGraph(data) {
-        for (var i = 0; i < 5; i++) {
-            var lgTitle = "Value " + i;
-            var lgTotalId = `lg${i}_total`;
-            var lgId = `lg${i}`;
-            console.log(i);
-            switch (i) {
-                case 0:
-                    appendLiveGraphToContent("Power", 'Watt', lgTotalId, lgId);
-                    break;
-                case 1:
-                    appendLiveGraphToContent("EMF", 'Voltage', lgTotalId, lgId);
-                    break;
-                case 2:
-                    appendLiveGraphToContent("Current", 'Ampere', lgTotalId, lgId);
-                    break;
-                case 3:
-                    appendLiveGraphToContent("Frequency", 'Hz', lgTotalId, lgId);
-                    break;
-                case 4:
-                    appendLiveGraphToContent("Power Factor", '', lgTotalId, lgId);
-                    break;
-                case 5:
-                    appendLiveGraphToContent("Power Factor", '', lgTotalId, lgId);
-                    break;
-                case 6:
-                    appendUsageToContent(data[i]);
-                    break;
-                default:
-                    console.log("Others");
-                    appendLiveGraphToContent("title", "Unit", lgTotalId, lgId);
-            }
-
-        }
-        resizeCanvas();
-    }
-
-    function addLiveGraph() {
-        var total = 0;
-
-        for (var i = 0; i < lines.length; i++) {
-            lines[i].append(Date.now(), data[i+1]);
-            changeElementVal(data[i+1],`lg${i}_total`);
-        }
-        changeElementVal(data[0],"energy")
-        changeElementVal(data[0]*18,"kwh_amount")
-        changeElementVal(data[1],"power")
-        changeElementVal(data[1]*18/1000,"w_amount")
-    }
-
-    function getRandomColor() {
-        var letters = '0123456789ABCDEF';
-        var color = '#';
-
-        
-        for (var i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 8)];
-        }
-        console.log(color);
-        return color;
-    }
-    // Resize the canvas width based on the parent div's width
-    function resizeCanvas() {
-        var chartContainer = document.getElementById('content');
-        var canvases = document.getElementsByClassName('LiveGraph');
-
-        for (var i = 0; i < canvases.length; i++) {
-            canvases[i].width = chartContainer.clientWidth - 20;
+function initLiveGraph(data) {
+    for (var i = 0; i < 5; i++) {
+        var lgTitle, lgTotalId, lgId;
+        switch (i) {
+            case 0:
+                lgTitle = "Power";
+                lgTotalId = `lg${i}_total`;
+                lgId = `lg${i}`;
+                appendLiveGraphToContent(lgTitle, 'Watt', lgTotalId, lgId);
+                break;
+            case 1:
+                lgTitle = "EMF";
+                lgTotalId = `lg${i}_total`;
+                lgId = `lg${i}`;
+                appendLiveGraphToContent(lgTitle, 'Voltage', lgTotalId, lgId);
+                break;
+            case 2:
+                lgTitle = "Current";
+                lgTotalId = `lg${i}_total`;
+                lgId = `lg${i}`;
+                appendLiveGraphToContent(lgTitle, 'Ampere', lgTotalId, lgId);
+                break;
+            case 3:
+                lgTitle = "Frequency";
+                lgTotalId = `lg${i}_total`;
+                lgId = `lg${i}`;
+                appendLiveGraphToContent(lgTitle, 'Hz', lgTotalId, lgId);
+                break;
+            case 4:
+                lgTitle = "Power Factor";
+                lgTotalId = `lg${i}_total`;
+                lgId = `lg${i}`;
+                appendLiveGraphToContent(lgTitle, '', lgTotalId, lgId);
+                break;
+            default:
+                break;
         }
     }
-    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+}
 
+function addLiveGraph() {
+    var total = 0;
+
+    for (var i = 0; i < lines.length; i++) {
+        lines[i].append(Date.now(), data[i+1]);
+        changeElementVal(data[i+1],`lg${i}_total`);
+    }
+    changeElementVal(data[0],"energy")
+    changeElementVal(data[0]*18,"kwh_amount")
+    changeElementVal(data[1],"power")
+    changeElementVal(data[1]*18/1000,"w_amount")
+}
+
+function changeElementVal(newVal, id) {
+    var element = document.getElementById(id);
+    element.innerText = newVal.toFixed(2);
+}
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 8)];
+    }
+    console.log(color);
+    return color;
+}
+
+// Resize the canvas width based on the parent div's width
+function resizeCanvas() {
+    var chartContainer = document.getElementById('content');
+    var canvases = document.getElementsByClassName('LiveGraph');
+
+    for (var i = 0; i < canvases.length; i++) {
+        canvases[i].width = chartContainer.clientWidth - 20;
+    }
+}
+
+window.addEventListener('resize', resizeCanvas);
 </script>
 </html>
