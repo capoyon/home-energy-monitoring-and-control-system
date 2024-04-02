@@ -276,26 +276,26 @@
     }
 
     function initLiveGraph(data) {
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < 5; i++) {
             var lgTitle = "Value " + i;
             var lgTotalId = `lg${i}_total`;
             var lgId = `lg${i}`;
             console.log(i);
             switch (i) {
                 case 0:
-                    appendLiveGraphToContent("Voltage", 'V', lgTotalId, lgId);
+                    appendLiveGraphToContent("Power", 'Watt', lgTotalId, lgId);
                     break;
                 case 1:
-                    appendLiveGraphToContent("Current", 'A', lgTotalId, lgId);
+                    appendLiveGraphToContent("EMF", 'Voltage', lgTotalId, lgId);
                     break;
                 case 2:
-                    appendLiveGraphToContent("Power", 'W', lgTotalId, lgId);
+                    appendLiveGraphToContent("Current", 'Ampere', lgTotalId, lgId);
                     break;
                 case 3:
-                    appendLiveGraphToContent("Energy", 'kWh', lgTotalId, lgId);
+                    appendLiveGraphToContent("Frequency", 'Hz', lgTotalId, lgId);
                     break;
                 case 4:
-                    appendLiveGraphToContent("Frequency", 'Hz', lgTotalId, lgId);
+                    appendLiveGraphToContent("Power Factor", '', lgTotalId, lgId);
                     break;
                 case 5:
                     appendLiveGraphToContent("Power Factor", '', lgTotalId, lgId);
@@ -316,8 +316,8 @@
         var total = 0;
 
         for (var i = 0; i < lines.length; i++) {
-            lines[i].append(Date.now(), data[i]);
-            changeElementVal(data[i],`lg${i}_total`);
+            lines[i].append(Date.now(), data[i+1]);
+            changeElementVal(data[i+1],`lg${i}_total`);
         }
         changeElementVal(data[0],"energy")
         changeElementVal(data[0]*18,"kwh_amount")
