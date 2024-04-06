@@ -47,7 +47,9 @@ void loop() {
 
   if (currentMillis - previousMillis >= 1000) {
     cleanupClients();
-    updateOverview();
+    if(overview.count()>0){
+        updateOverview();
+    }
     previousMillis = currentMillis;
     printLocalTime();
   }
