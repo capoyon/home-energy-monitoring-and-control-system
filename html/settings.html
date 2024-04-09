@@ -217,8 +217,7 @@
             <button class="button" onclick="reboot()">Reboot</button>
     </div>
     <script>
-        // var gateway = `ws://${window.location.hostname}/settings`;
-        var gateway = "ws://192.168.10.128/settings"
+        var gateway = `ws://${window.location.hostname}/settings`;
         var websocket;
         window.addEventListener('load', onLoad);
         function initWebSocket() {
@@ -253,13 +252,13 @@
         }
 
     document.getElementById('wifi').addEventListener('click', function() {
-    var ssidRegex = /^.{8,32}$/;
+    var ssidRegex = /^.{1,32}$/;
     var passwordRegex = /^.{8,60}$/;
     var ssid = prompt('Enter WiFi Name:');
     if (ssid !== null) {
         // Check if SSID matches the pattern
         if (!ssidRegex.test(ssid)) { 
-            alert('Invalid WiFi name. Please enter up to 32 characters');
+            alert('Invalid WiFi name. Enter 1-32 characters only');
             return; 
         }
 

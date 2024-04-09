@@ -1,9 +1,8 @@
 #ifndef DATAHANDLER_H
 #define DATAHANDLER_H
 
+#include <WiFi.h>
 #include "SPIFFS.h"
-
-#include "wifi.h"
 #include "pzem.h"
 
 #define BUFFER_SIZE 512

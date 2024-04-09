@@ -1,9 +1,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
-
 #include "datahandler.h"
-#include "wifi.h"
 #include "html.h"
 #include "websocket.h"
 #include "time.h"
@@ -25,9 +23,7 @@ void initWebServer();
 void setup(){
   Serial.begin(115200);
   datahandler.init();
-  //connect to wifi and start hotspot
-  startWifiAP(datahandler.getAPSsid(), datahandler.getAPPassword());
-  if (datahandler.getWifiSSID() != NULL) connectToWifi(datahandler.getWifiSSID(), datahandler.getWifiPassword());
+  
   // Init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   printLocalTime();

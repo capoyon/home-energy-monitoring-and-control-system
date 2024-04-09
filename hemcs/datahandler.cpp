@@ -2,8 +2,6 @@
 
 Pzem pzem(16, 17);
 
-
-
 // Private
 void DataHandler::changeAP(const char* name, const char* pass) {
   // chagne the ap name and password and its save config files.
@@ -15,6 +13,10 @@ void DataHandler::init() {
   freeSPIFFS = (SPIFFS.totalBytes() - SPIFFS.usedBytes()) / (1024.0 * 1024.0);
   Serial.printf("Available SPIFFS: %f MB\n", freeSPIFFS);
   loadConfig();
+
+  //connect to wifi and start hotspot
+  WiFi.softAP(ap_ssid, ap_password);
+  WiFi.begin(wifi_ssid, wifi_password);
 }
 
 void DataHandler::reCreateFile(const char* name) {
@@ -129,13 +131,13 @@ void DataHandler::handleSocketCommand(const char* command) {
       strcpy(wifi_ssid, data[1]);
       strcpy(wifi_password, data[2]);
       Serial.printf("WiFi credentials have changed: %s:%s", data[1], data[2]);
-      connectToWifi(wifi_ssid, wifi_password);
+      WiFi.begin(wifi_ssid, wifi_password);
       break;
     case 41:
       strcpy(ap_ssid, data[1]);
       strcpy(ap_password, data[2]);
       Serial.printf("AP credentials have changed: %s:%s", data[1], data[2]);
-      startWifiAP(ap_ssid, ap_password);
+      WiFi.softAP(ap_ssid, ap_password);
       break;
     default:
       Serial.println("Error: invalid command from websocket");
