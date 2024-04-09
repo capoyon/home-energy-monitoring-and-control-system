@@ -1,34 +1,35 @@
 #ifndef DATAHANDLER_H
 #define DATAHANDLER_H
 
-#include <Preferences.h>
-#include <ArduinoJson.h>
+#include "SPIFFS.h"
+
 #include "wifi.h"
 #include "pzem.h"
 
-
+#define BUFFER_SIZE 512
+#define CONFIG_NUM 8
 
 class DataHandler {
 private:
-
-    Preferences preferences;
-
-    char* wifi_ssid;
-    char* wifi_password;
-    char* ap_ssid;
-    char* ap_password;
-    uint8_t currency;
-    float electric_rate;
-    bool is24HourFormat;
-    bool isAutoSetTime;
-
-
-    // for automation
+    
+    char buffer[BUFFER_SIZE];
     
 
-    char buffer[512];
+    const char* config = "/config.json";
+    const char* data = "/data.json";
+
+    float freeSPIFFS;
+    char wifi_ssid[60]= "WiFi";
+    char  wifi_password[60]= "password112233";
+    char  ap_ssid[60] = "HEMCS";
+    char ap_password[60] = "hemcs123";
+    char currency = 'P';
+    float electric_rate = 18;
+    bool is24HourFormat = false;
+    bool isAutoSetTime = true;
 
     void changeAP(const char* name, const char* pass);
+    void reCreateFile(const char *name);
 
 public:
     void init();

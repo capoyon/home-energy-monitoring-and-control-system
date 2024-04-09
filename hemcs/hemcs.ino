@@ -23,20 +23,15 @@ void printLocalTime();
 void initWebServer();
 
 void setup(){
-  // Serial port for debugging purposes
   Serial.begin(115200);
-  Serial.println("");
-  Serial.println("");
-  Serial.println("");
   datahandler.init();
   //connect to wifi and start hotspot
   startWifiAP(datahandler.getAPSsid(), datahandler.getAPPassword());
-  connectToWifi(datahandler.getWifiSSID(), datahandler.getWifiPassword());
+  if (datahandler.getWifiSSID() != NULL) connectToWifi(datahandler.getWifiSSID(), datahandler.getWifiPassword());
   // Init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   printLocalTime();
-
-
+  
   initWebSocket();
   initWebServer();
 }
@@ -51,7 +46,7 @@ void loop() {
         updateOverview();
     }
     previousMillis = currentMillis;
-    printLocalTime();
+    // printLocalTime();
   }
 }
 
@@ -92,33 +87,5 @@ void printLocalTime(){
     return;
   }
   time_t posix_time = mktime(&timeinfo);
-
-    // Print the POSIX time
   Serial.println(posix_time);
-  //Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-  // Serial.print("Day of week: ");
-  // Serial.println(&timeinfo, "%A");
-  // Serial.print("Month: ");
-  // Serial.println(&timeinfo, "%B");
-  // Serial.print("Day of Month: ");
-  // Serial.println(&timeinfo, "%d");
-  // Serial.print("Year: ");
-  // Serial.println(&timeinfo, "%Y");
-  // Serial.print("Hour: ");
-  // Serial.println(&timeinfo, "%H");
-  // Serial.print("Hour (12 hour format): ");
-  // Serial.println(&timeinfo, "%I");
-  // Serial.print("Minute: ");
-  // Serial.println(&timeinfo, "%M");
-  // Serial.print("Second: ");
-  // Serial.println(&timeinfo, "%S");
-
-  // Serial.println("Time variables");
-  // char timeHour[3];
-  // strftime(timeHour,3, "%H", &timeinfo);
-  // Serial.println(timeHour);
-  // char timeWeekDay[10];
-  // strftime(timeWeekDay,10, "%A", &timeinfo);
-  // Serial.println(timeWeekDay);
-  // Serial.println();
 }

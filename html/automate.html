@@ -66,7 +66,28 @@
         margin-left: 145px;
         padding: 4px 10px 10px 10px;
         border-top-left-radius: 10px;
+
     }
+
+    .trigger-options {
+        margin-bottom: 20px;
+    }
+    
+    button {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+    
+    button:hover {
+        background-color: #0056b3;
+    }
+
+
 
     #s {
         display: none;
@@ -136,12 +157,32 @@
     <div id="content">
         <div class="card">
             <h2>Automation Settings</h2>
-            <p><button id="button" class="button">Toggle LED</button></p>
-            <p class="state">State: <span id="state">%s</span></p>
+            <section id="trigger-section">
+                <h4>Choose Trigger</h4>
+                <div class="trigger-options">
+                  <input type="radio" id="trigger1" name="trigger" value="trigger1" aria-label="Trigger 1">
+                  <label for="trigger1">Trigger 1</label><br>
+                  <input type="radio" id="trigger2" name="trigger" value="trigger2" aria-label="Trigger 2">
+                  <label for="trigger2">Trigger 2</label><br>
+                  <input type="radio" id="trigger3" name="trigger" value="trigger3" aria-label="Trigger 3">
+                  <label for="trigger3">Trigger 3</label><br>
+                </div>
+              </section>
+              <!-- Task section -->
+              <section id="task-section">
+                <h4>Choose Task</h3>
+                <select id="task-dropdown" aria-label="Select Task">
+                  <option value="task1">Turn off power supply</option>
+                  <option value="task2">Reset Electricity Data</option>
+                  <option value="task3">Reboot </option>
+                </select>
+              </section>
+              <!-- Link button -->
+              <button id="link-button">Add task</button>
         </div>
     </div>
     <script>
-        var gateway = `ws://${window.location.hostname}/ws`;
+        var gateway = `ws://${window.location.hostname}/automate`;
         var websocket;
         window.addEventListener('load', onLoad);
         function initWebSocket() {
@@ -159,26 +200,28 @@
             setTimeout(initWebSocket, 2000);
         }
         function onMessage(event) {
-            var state;
             console.log(event.data);
-            if (event.data == "1") {
-                state = "ON";
-            }
-            else {
-                state = "OFF";
-            }
-            document.getElementById('state').innerHTML = state;
         }
         function onLoad(event) {
             initWebSocket();
-            initButton();
         }
-        function initButton() {
-            document.getElementById('button').addEventListener('click', toggle);
+
+        function adjustContentHeight() {
+        var element = document.getElementById('content');
+        var deviceHeight = window.innerHeight;
+        var elementHeight = element.offsetHeight;
+
+        // Compare element height with device height
+        if (elementHeight < deviceHeight) {
+            element.style.height = deviceHeight - 90 + 'px';
         }
-        function toggle() {
-            websocket.send('toggle');
-        }
+    }
+
+    // Call the function when the window is resized
+    window.addEventListener('resize', adjustContentHeight);
+
+    // Call the function initially
+    adjustContentHeight();
     </script>
 </body>
 </html>

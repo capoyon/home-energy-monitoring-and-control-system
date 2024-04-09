@@ -193,7 +193,8 @@ var isTableInit = false;
 
 window.addEventListener('load', onLoad);
 
-var gateway = `ws://${window.location.hostname}/overview`;
+// var gateway = `ws://${window.location.hostname}/overview`;
+var gateway = "ws://192.168.10.128/overview"
 var websocket;
 
 function initWebSocket() {
@@ -274,6 +275,7 @@ function appendLiveGraphToContent(lgTitle, unit, lgTotalId, lgId) {
 }
 
 function initLiveGraph(data) {
+    document.getElementById('content').style.height = 'auto';
     for (var i = 0; i < 5; i++) {
         var lgTitle, lgTotalId, lgId;
         switch (i) {
@@ -370,5 +372,23 @@ function updateTime(epochTime, use24HourFormat = false) {
 
 updateTime(Date.now() / 1000);
 setInterval(() => updateTime(Date.now() / 1000), 1000);
+
+
+function adjustContentHeight() {
+        var element = document.getElementById('content');
+        var deviceHeight = window.innerHeight;
+        var elementHeight = element.offsetHeight;
+
+        // Compare element height with device height
+        if (elementHeight < deviceHeight) {
+            element.style.height = deviceHeight - 90 + 'px';
+        }
+    }
+
+    // Call the function when the window is resized
+    window.addEventListener('resize', adjustContentHeight);
+
+    // Call the function initially
+    adjustContentHeight();
 </script>
 </html>

@@ -129,6 +129,15 @@
             border-radius: 68px;
         }
 
+        .button {
+            padding: 10px 20px;
+            background-color: rgb(24, 15, 146);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
         input:checked + .slider {
             background-color: #2196F3;
         }
@@ -202,11 +211,14 @@
                 <option value="¥">¥</option>
               </select></div>
             <div class="card" id="electric-rate">Electricity rate<div><span id="rate_cur"></span><span id="rate">...</span>/kWh</div></div>
-            <div class="card">24 hour time format<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="is24h"><span class="slider"></span></label></div>
-            <div class="card">Set time automatically<label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="auto_t"><span class="slider"></span></label></div>
+            <div class="card">24 hour time format<label class="switch"><input type="checkbox" onchange="toggle24h(this)" id="is24h"><span class="slider"></span></label></div>
+            <div class="card">Set time automatically<label class="switch"><input type="checkbox" onchange="toggleautotime(this)" id="auto_t"><span class="slider"></span></label></div>
+            <div class="card">Set time <input type="datetime-local" id="select-datetime"></div>
+            <button class="button" onclick="reboot()">Reboot</button>
     </div>
     <script>
-        var gateway = `ws://${window.location.hostname}/settings`;
+        // var gateway = `ws://${window.location.hostname}/settings`;
+        var gateway = "ws://192.168.10.128/settings"
         var websocket;
         window.addEventListener('load', onLoad);
         function initWebSocket() {
@@ -240,35 +252,14 @@
             document.getElementById("auto_t").checked = !!data.t_auto;
         }
 
-    document.getElementById('electric-rate').addEventListener('click', function() {
-    var input;
-    var floatValue;
-    do {
-        input = prompt('Enter rate per kWh:');
-        
-        if (input === null) {
-            return;
-        }
-        floatValue = parseFloat(input);
-
-        if (!isNaN(floatValue) && floatValue > 0) {
-            break;
-        } else {
-            alert('Invalid input.');
-        }
-    } while (true);
-        alert('Electricity rate updated successfully!\nRate: ₱' + floatValue + " per kWh");
-    });
-
-
     document.getElementById('wifi').addEventListener('click', function() {
-    var ssidRegex = /^[A-Za-z0-9_ -]{1,32}$/;
-    var passwordRegex = /^.{8,}$/;
+    var ssidRegex = /^.{8,32}$/;
+    var passwordRegex = /^.{8,60}$/;
     var ssid = prompt('Enter WiFi Name:');
     if (ssid !== null) {
         // Check if SSID matches the pattern
         if (!ssidRegex.test(ssid)) { 
-            alert('Invalid WiFi name. Please enter up to 32 characters, using only alphanumeric characters, _, - and space.');
+            alert('Invalid WiFi name. Please enter up to 32 characters');
             return; 
         }
 
@@ -279,15 +270,15 @@
                 alert('Invalid WiFi password. Password must be at least 8 characters long.');
                 return; 
             }
-            updateSettings(40, {"ssid": ssid, "pass": password});
+            updateSettings(40, ssid, password);
             alert('Wi-Fi updated successfully!\nName: ' + ssid + '\nPassword: ' + password);
         }
     }
 });
 
 document.getElementById('hotspot').addEventListener('click', function() {
-    var ssidRegex = /^[A-Za-z0-9_ -]{1,10}$/;
-    var passwordRegex = /^.{8,10}$/;
+    var ssidRegex = /^[A-Za-z0-9_ -]{1,60}$/;
+    var passwordRegex = /^.{8,60}$/;
 
     var ssid = prompt('Enter Hotspot Name (up to 10 characters):');
     // Check if user hasn't cancelled the SSID prompt
@@ -306,19 +297,82 @@ document.getElementById('hotspot').addEventListener('click', function() {
                 alert('Invalid Hotspot password. Password must be at least 8 characters long.');
                 return;
             }
-            websocket.send("02"+ssid+":=:"+password);
+            updateSettings(41, ssid, password);
             alert('Hotspot updated successfully!\nName: ' + ssid + '\nPassword: ' + password);
         }
     }
 });
 
-function updateSettings(cmd, data) {
+document.getElementById("currency").addEventListener("change", function() {
+  var selectedCurrency = this.value;
+  updateSettings(42,selectedCurrency);
+  alert("Currency is changed to: " + selectedCurrency);
+});
+
+document.getElementById('electric-rate').addEventListener('click', function() {
+    var input;
+    var floatValue;
+    do {
+        input = prompt('Enter rate per kWh:');
+        
+        if (input === null) {
+            return;
+        }
+        floatValue = parseFloat(input);
+
+        if (!isNaN(floatValue) && floatValue > 0) {
+            break;
+        } else {
+            alert('Invalid input.');
+        }
+    } while (true);
+        updateSettings(43, floatValue);
+        alert('Electricity rate updated successfully!\nRate: ₱' + floatValue + " per kWh");
+    });
+
+    function toggle24h(checkbox) {
+  // Check if the checkbox is checked or not
+  if (checkbox.checked) {
+    // If checked, alert the value 'true'
+    alert("24 hour time format: true");
+  } else {
+    // If not checked, alert the value 'false'
+    alert("Checkbox value: false");
+  }
+}
+function toggleautotime(checkbox) {
+  // Check if the checkbox is checked or not
+  if (checkbox.checked) {
+    // If checked, alert the value 'true'
+    alert("Checkbox value: true");
+  } else {
+    // If not checked, alert the value 'false'
+    alert("Checkbox value: false");
+  }
+}
+document.getElementById('select-datetime').addEventListener('change', function() {
+    var selectedDateTime = this.value;
+    var epochTime = new Date(selectedDateTime).getTime() / 1000; // Convert milliseconds to seconds
+    if (window.confirm("Do you want to change the time to: " + selectedDateTime )) {
+        // Code to execute if the user clicks "OK" or "Yes"
+        console.log("User clicked OK");
+        // You can replace the console.log with any action you want to take.
+    } else {
+        // Code to execute if the user clicks "Cancel" or "No"
+        console.log("User clicked Cancel");
+        // You can replace the console.log with any action you want to take.
+    }
+});
+
+
+
+
+
+
+
+function updateSettings(cmd, a, b) {
     try {
-        var command = {
-            cmd: cmd,
-            data: data
-        };
-        var socket_data = JSON.stringify(command);
+        var socket_data = ":=:" + cmd + ":=:" + a + ":=:" + b + ":=:";
         console.log(socket_data);
 
         if (websocket.readyState === websocket.OPEN) {
@@ -331,6 +385,23 @@ function updateSettings(cmd, data) {
     }
 }
 
+    // Function to adjust element height
+    function adjustContentHeight() {
+        var element = document.getElementById('content');
+        var deviceHeight = window.innerHeight;
+        var elementHeight = element.offsetHeight;
+
+        // Compare element height with device height
+        if (elementHeight < deviceHeight) {
+            element.style.height = deviceHeight - 90 + 'px';
+        }
+    }
+
+    // Call the function when the window is resized
+    window.addEventListener('resize', adjustContentHeight);
+
+    // Call the function initially
+    adjustContentHeight();
 </script>
 </body>
 </html>

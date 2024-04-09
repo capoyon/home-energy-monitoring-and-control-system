@@ -21,19 +21,15 @@
             top: 0;
             left: 0;
             z-index: 1;
+            height: 70px;
+            background-color: #f4f4f4;
         }
     
         #title-bar a {
-            width: 100%;
+            text-decoration: none;
             color: #000000;
-            padding: 20px 0px 0px 30px;
-            box-sizing: border-box;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            height: 70px;
-            background-color: #f4f4f4;
+            font-size: 25px;
+            font-weight: bolder;
         }
     
         #sidebar {
@@ -138,12 +134,14 @@
     </div>
 
     <div id="content">
-        <div class="card">
-            <h2>Usage History</h2>
-            <p><button id="button" class="button">Toggle LED</button></p>
-            <p class="state">State: <span id="state">%s</span></p>
-        </div>
+        <h1>Saturday April 6</h1>
+        <div id="dailyChart" class="chart"></div>
+        <h1>April 2024</h1>
+        <div id="monthlyChart" class="chart"></div>
+        <h1>Yearly Energy Consumption</h1>
+        <div id="yearlyChart" class="chart"></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
@@ -183,6 +181,92 @@
         function toggle() {
             websocket.send('toggle');
         }
+
+
+        // graph
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Data for the bar chart (energy consumption over days of the month)
+            var monthlyOptions = {
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    width: '100%',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                series: [{
+                    name: 'Daily Consumption',
+                    data: [100, 150, 120, 200, 180, 250, 220, 200, 180, 150, 120, 100, 90, 80, 100, 120, 150, 180, 200, 220, 250, 200, 150, 120, 100, 150, 180, 200, 220, 250]
+                }],
+                xaxis: {
+                    type: 'category',
+                    categories: Array.from({ length: 30 }, (_, i) => i + 1) // Assuming 30 days in a month
+                },
+                colors: ['#4682B4']
+            };
+
+            var monthlyChart = new ApexCharts(document.querySelector("#monthlyChart"), monthlyOptions);
+            monthlyChart.render();
+
+            // Data for the area chart (energy consumption over a single day)
+            var dailyOptions = {
+                chart: {
+                    type: 'area',
+                    height: 350,
+                    width: '100%',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                series: [{
+                    name: 'Hour Consumption',
+                    data: [100, 150, 120, 200, 180, 250, 220, 200, 180, 150, 120, 100, 90, 80, 100, 120, 150, 180, 200, 220, 250, 200, 150]
+                }],
+                xaxis: {
+                    type: 'category',
+                    categories: ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM']
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.7,
+                        opacityTo: 0.9,
+                        stops: [0, 100]
+                    }
+                },
+                colors: ['#ff8c00']
+            };
+
+            var dailyChart = new ApexCharts(document.querySelector("#dailyChart"), dailyOptions);
+            dailyChart.render();
+
+            // Data for the yearly chart (energy consumption over months)
+            var yearlyOptions = {
+                chart: {
+                    type: 'line',
+                    height: 350,
+                    width: '100%',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                series: [{
+                    name: 'Monthly Consumption',
+                    data: [1500, 1800, 2000, 2200, 2500, 2200, 2000, 1800, 1500, 1200, 1000, 800]
+                }],
+                xaxis: {
+                    type: 'category',
+                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                },
+                colors: ['#32CD32']
+            };
+
+            var yearlyChart = new ApexCharts(document.querySelector("#yearlyChart"), yearlyOptions);
+            yearlyChart.render();
+        });
     </script>
 </body>
 </html>
