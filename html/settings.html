@@ -11,7 +11,11 @@
             padding: 0;
             background-color: #f4f4f4;
         }
-    
+        p {
+            font-size: small;
+            padding: 0px;
+            margin: 5px;
+        }
         #title-bar {
             width: 100%;
             color: #000000;
@@ -201,8 +205,8 @@
     <div id="content">
 
             <h2>Settings</h2>
-            <div class="card" id="wifi">Wi-Fi <div><span id="sta">...</span>:<span id="sta_p">...</span></div></div>
-            <div class="card" id="hotspot">Hotspot<div><span id="ap">...</span>:<span id="ap_p">...</span></div></div>
+            <div class="card" id="wifi">Wi-Fi <div><p id="sta">...</p><p id="sta_p">...</p></div></div>
+            <div class="card" id="hotspot">Hotspot<div><p id="ap">...</p><p id="ap_p">...</p></div></div>
             <div class="card">Currency<select id="currency">
                 <option value="₱">₱</option>
                 <option value="$">$</option>
@@ -240,10 +244,10 @@
         function onMessage(event) {
             data = JSON.parse(event.data);
             console.log(data);
-            document.getElementById("sta").innerHTML = data.sta;
-            document.getElementById("sta_p").innerHTML = data.sta_p;
-            document.getElementById("ap").innerHTML = data.ap;
-            document.getElementById("ap_p").innerHTML = data.ap_p;
+            document.getElementById("sta").innerHTML = "Name: " + data.sta;
+            document.getElementById("sta_p").innerHTML = "IP: " + data.sta_p;
+            document.getElementById("ap").innerHTML = "Name: " + data.ap;
+            document.getElementById("ap_p").innerHTML = "Password: " + data.ap_p;
             document.getElementById("currency").selectedIndex = data.cur;
             document.getElementById("rate_cur").innerHTML = document.getElementById("currency").value;
             document.getElementById("rate").innerHTML = data.rate;
