@@ -166,6 +166,8 @@ void DataHandler::handleSocketCommand(const char* command) {
       Serial.printf("Time is set to: %s\n", data[1]);
       return;
       break;
+    case 99:
+      ESP.restart();
     default:
       Serial.println("Error: invalid command from websocket");
       return;
