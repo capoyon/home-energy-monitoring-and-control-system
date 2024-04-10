@@ -71,7 +71,7 @@ void DataHandler::loadConfig() {
   strcpy(wifi_password, data[1]);
   strcpy(ap_ssid, data[2]);
   strcpy(ap_password, data[3]);
-  currency = data[4][0];
+  currency = atoi(data[4]);
   electric_rate = atof(data[5]);
   is24HourFormat = atoi(data[6]);
   isAutoSetTime = atoi(data[7]);
