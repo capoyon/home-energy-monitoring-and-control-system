@@ -220,42 +220,42 @@
             <div class="card">Set time <input type="datetime-local" id="select-datetime"></div>
             <button class="button" onclick="reboot()">Reboot</button>
     </div>
-    <script>
-        var gateway = `ws://${window.location.hostname}/settings`;
-        var websocket;
-        window.addEventListener('load', onLoad);
-        function initWebSocket() {
-            console.log('Trying to open a WebSocket connection...');
-            websocket = new WebSocket(gateway);
-            websocket.onopen = onOpen;
-            websocket.onclose = onClose;
-            websocket.onmessage = onMessage; 
-        }
-        function onLoad(event) {
-            initWebSocket();
-        }
-        function onOpen(event) {
-            console.log('Connection opened');
-        }
-        function onClose(event) {
-            console.log('Connection closed');
-            setTimeout(initWebSocket, 2000);
-        }
-        function onMessage(event) {
-            data = JSON.parse(event.data);
-            console.log(data);
-            document.getElementById("sta").innerHTML = "Name: " + data.sta;
-            document.getElementById("sta_p").innerHTML = "IP: " + data.sta_p;
-            document.getElementById("ap").innerHTML = "Name: " + data.ap;
-            document.getElementById("ap_p").innerHTML = "Password: " + data.ap_p;
-            document.getElementById("currency").selectedIndex = data.cur;
-            document.getElementById("rate_cur").innerHTML = document.getElementById("currency").value;
-            document.getElementById("rate").innerHTML = data.rate;
-            document.getElementById("is24h").checked = !!data.t_format;
-            document.getElementById("auto_t").checked = !!data.t_auto;
-        }
+<script>
+var gateway = `ws://${window.location.hostname}/settings`;
+var websocket;
+window.addEventListener('load', onLoad);
+function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen = onOpen;
+    websocket.onclose = onClose;
+    websocket.onmessage = onMessage; 
+}
+function onLoad(event) {
+    initWebSocket();
+}
+function onOpen(event) {
+    console.log('Connection opened');
+}
+function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
+function onMessage(event) {
+    data = JSON.parse(event.data);
+    console.log(data);
+    document.getElementById("sta").innerHTML = "Name: " + data.sta;
+    document.getElementById("sta_p").innerHTML = "IP: " + data.sta_p;
+    document.getElementById("ap").innerHTML = "Name: " + data.ap;
+    document.getElementById("ap_p").innerHTML = "Password: " + data.ap_p;
+    document.getElementById("currency").selectedIndex = data.cur;
+    document.getElementById("rate_cur").innerHTML = document.getElementById("currency").value;
+    document.getElementById("rate").innerHTML = data.rate;
+    document.getElementById("is24h").checked = !!data.t_format;
+    document.getElementById("auto_t").checked = !!data.t_auto;
+}
 
-    document.getElementById('wifi').addEventListener('click', function() {
+document.getElementById('wifi').addEventListener('click', function() {
     var ssidRegex = /^.{1,32}$/;
     var passwordRegex = /^.{8,60}$/;
     var ssid = prompt('Enter WiFi Name:');
@@ -307,7 +307,7 @@ document.getElementById('hotspot').addEventListener('click', function() {
 });
 
 document.getElementById("currency").addEventListener("change", function() {
-  var selectedCurrency = this.value;
+  var selectedCurrency = this.selectedIndex;
   updateSettings(42,selectedCurrency);
   alert("Currency is changed to: " + selectedCurrency);
 });
@@ -331,48 +331,25 @@ document.getElementById('electric-rate').addEventListener('click', function() {
     } while (true);
         updateSettings(43, floatValue);
         alert('Electricity rate updated successfully!\nRate: ₱' + floatValue + " per kWh");
-    });
+});
 
-    function toggle24h(checkbox) {
-  // Check if the checkbox is checked or not
-  if (checkbox.checked) {
-    // If checked, alert the value 'true'
-    alert("24 hour time format: true");
-  } else {
-    // If not checked, alert the value 'false'
-    alert("Checkbox value: false");
-  }
+function toggle24h(checkbox) {
+    updateSettings(44, checkbox.checked ? 1 : 0);
 }
+
 function toggleautotime(checkbox) {
-  // Check if the checkbox is checked or not
-  if (checkbox.checked) {
-    // If checked, alert the value 'true'
-    alert("Checkbox value: true");
-  } else {
-    // If not checked, alert the value 'false'
-    alert("Checkbox value: false");
-  }
+    updateSettings(45, checkbox.checked ? 1 : 0);
 }
 document.getElementById('select-datetime').addEventListener('change', function() {
     var selectedDateTime = this.value;
-    var epochTime = new Date(selectedDateTime).getTime() / 1000; // Convert milliseconds to seconds
+    var epochTime = new Date(selectedDateTime).getTime() / 1000;
     if (window.confirm("Do you want to change the time to: " + selectedDateTime )) {
-        // Code to execute if the user clicks "OK" or "Yes"
-        console.log("User clicked OK");
-        // You can replace the console.log with any action you want to take.
-    } else {
-        // Code to execute if the user clicks "Cancel" or "No"
-        console.log("User clicked Cancel");
-        // You can replace the console.log with any action you want to take.
+        updateSettings(46, epochTime);
     }
 });
 
 
-
-
-
-
-
+// function for sending socket message
 function updateSettings(cmd, a, b) {
     try {
         var socket_data = ":=:" + cmd + ":=:" + a + ":=:" + b + ":=:";
@@ -388,23 +365,23 @@ function updateSettings(cmd, a, b) {
     }
 }
 
-    // Function to adjust element height
-    function adjustContentHeight() {
-        var element = document.getElementById('content');
-        var deviceHeight = window.innerHeight;
-        var elementHeight = element.offsetHeight;
+// Function to adjust element height
+function adjustContentHeight() {
+    var element = document.getElementById('content');
+    var deviceHeight = window.innerHeight;
+    var elementHeight = element.offsetHeight;
 
-        // Compare element height with device height
-        if (elementHeight < deviceHeight) {
-            element.style.height = deviceHeight - 90 + 'px';
-        }
+    // Compare element height with device height
+    if (elementHeight < deviceHeight) {
+        element.style.height = deviceHeight - 90 + 'px';
     }
+}
 
-    // Call the function when the window is resized
-    window.addEventListener('resize', adjustContentHeight);
+// Call the function when the window is resized
+window.addEventListener('resize', adjustContentHeight);
 
-    // Call the function initially
-    adjustContentHeight();
+// Call the function initially
+adjustContentHeight();
 </script>
 </body>
 </html>

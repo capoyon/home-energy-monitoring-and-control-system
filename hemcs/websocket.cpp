@@ -62,16 +62,17 @@ void onEventSettings(AsyncWebSocket * server, AsyncWebSocketClient * client, Aws
                 socket_buffer[min(len, socket_buffer_size - 1)] = '\0'; // Null-terminate the string
                 Serial.printf("%s\n", socket_buffer);
                 datahandler.handleSocketCommand(socket_buffer);
+                settings.textAll(datahandler.getSettingsJSON());
             } else {
                 for (size_t i = 0; i < info->len; i++) {
                     Serial.printf("%02x ", data[i]);
                 }
                 Serial.printf("\n");
             }
-            if (info->opcode == WS_TEXT)
-                client->text("I got your text message");
-            else
-                client->binary("I got your binary message");
+            // if (info->opcode == WS_TEXT)
+            //     client->text("I got your text message");
+            // else
+            //     client->binary("I got your binary message");
         } else {
             // Handle multi-frame messages here
         }

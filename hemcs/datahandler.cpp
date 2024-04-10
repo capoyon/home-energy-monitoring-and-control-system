@@ -105,6 +105,14 @@ char* DataHandler::getSettingsJSON()
   return buffer;
 }
 
+
+/*
+ This is for parsing the socket message from settings page.
+    Expected input: ":=:42:=:data 1:=:data 2:=:"
+    :=: - the data separator/delimiter.
+    42 - first 2 digit are the operation code
+    data 1 and 2 - the data for the operation
+*/
 void DataHandler::handleSocketCommand(const char* command) {
   char* token;
   size_t command_len = strlen(command) + 1;
@@ -112,12 +120,10 @@ void DataHandler::handleSocketCommand(const char* command) {
     Serial.println("Socket data to large");
     return;
   }
-  char str[command_len];  // Make a copy of the command string
+  char str[command_len]; 
   strcpy(str, command);
-  char data[3][64];  // Assuming maximum length of each data is 20 characters
-
-  // Parsing the string using strtok function
-  token = strtok(str, ":=:");  // Delimiter is ":=:"
+  char data[3][64];
+  token = strtok(str, ":=:"); 
   int i = 0;
   while (token != NULL && i < 3) {
     strcpy(data[i], token);
@@ -127,17 +133,38 @@ void DataHandler::handleSocketCommand(const char* command) {
 
   int cmd = atoi(data[0]);
   switch (cmd) {
-    case 40:
+    case 40: // Change Wi-Fi station credential
       strcpy(wifi_ssid, data[1]);
       strcpy(wifi_password, data[2]);
-      Serial.printf("WiFi credentials have changed: %s:%s", data[1], data[2]);
+      Serial.printf("WiFi credentials have changed: %s:%s\n", wifi_ssid, wifi_password);
       WiFi.begin(wifi_ssid, wifi_password);
       break;
-    case 41:
+    case 41: // Change Wi-Fi hotspot credential
       strcpy(ap_ssid, data[1]);
       strcpy(ap_password, data[2]);
-      Serial.printf("AP credentials have changed: %s:%s", data[1], data[2]);
+      Serial.printf("AP credentials have changed: %s:%s\n", ap_ssid, ap_password);
       WiFi.softAP(ap_ssid, ap_password);
+      break;
+    case 42: // change currency type
+      currency =  atoi(data[1]);
+      Serial.printf("Currency set to: %d\n", currency);
+      break;
+    case 43: // change electricity rate
+      electric_rate = atof(data[1]);
+      Serial.printf("Electricity rate is set to: %f\n", electric_rate);
+      break;
+    case 44: // is 24 hour format?
+      is24HourFormat = atoi(data[1]);
+      Serial.printf("24 hour format is set to: %d\n", is24HourFormat);
+      break;
+    case 45: // is auto set time
+      isAutoSetTime = atoi(data[1]);
+      Serial.printf("Autotime is set to: %d\n", isAutoSetTime);
+      break;
+    case 46: // set time
+      // Todo
+      Serial.printf("Time is set to: %s\n", data[1]);
+      return;
       break;
     default:
       Serial.println("Error: invalid command from websocket");

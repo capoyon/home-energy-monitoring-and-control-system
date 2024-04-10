@@ -22,7 +22,7 @@ private:
     char  wifi_password[60]= "password112233";
     char  ap_ssid[60] = "HEMCS";
     char ap_password[60] = "hemcs123";
-    char currency = 'P';
+    int currency = 0;
     float electric_rate = 18;
     bool is24HourFormat = false;
     bool isAutoSetTime = true;
