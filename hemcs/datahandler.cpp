@@ -53,7 +53,7 @@ void DataHandler::loadConfig() {
 
   Serial.printf("Config Data: %s\n", buffer);
   char *token;
-  char data[8][64]; // Assuming maximum length of each data is 20 characters
+  char data[8][64];
 
   // Parsing the string using strtok function
   token = strtok(buffer, ":=:"); // Delimiter is ":=:"
@@ -63,18 +63,7 @@ void DataHandler::loadConfig() {
       token = strtok(NULL, ":=:");
       i++;
   }
-
-  for(i = 0; i < 8; i++){
-    Serial.println(data[i]);
-  }
-  strcpy(wifi_ssid, data[0]);
-  strcpy(wifi_password, data[1]);
-  strcpy(ap_ssid, data[2]);
-  strcpy(ap_password, data[3]);
-  currency = atoi(data[4]);
-  electric_rate = atof(data[5]);
-  is24HourFormat = atoi(data[6]);
-  isAutoSetTime = atoi(data[7]);
+  Serial.printf("Saved config data: %s\n", getSettingsJSON());
 }
 
 
