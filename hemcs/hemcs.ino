@@ -70,6 +70,9 @@ void initWebServer() {
       request->send_P(200, "text/css", general_css, general_css_len);
   });
 
+  server.on("/general.js", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send_P(200, "text/javascript", general_js, general_js_len);
+  });
 
   server.on("/overview", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", overview_html, overview_html_len);
