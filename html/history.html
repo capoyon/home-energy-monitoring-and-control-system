@@ -55,7 +55,7 @@
             </a>
         </div>
     </div>
-
+    <div id="content" style="display: none;"></div>
     <div id="graphcontent">
         <h1>Saturday April 6</h1>
         <div id="dailyChart" class="chart"></div>
@@ -64,8 +64,9 @@
         <h1>Yearly Energy Consumption</h1>
         <div id="yearlyChart" class="chart"></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
     <script src="general.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
+    
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
