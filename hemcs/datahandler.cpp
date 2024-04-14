@@ -11,8 +11,15 @@ void DataHandler::changeAP(const char* name, const char* pass) {
 void DataHandler::init() {
   SPIFFS.begin(true);
   loadConfig();
-  //connect to wifi
-  WiFi.begin(wifi_ssid, wifi_password);
+
+  //start soft ap
+  Serial.printf("Starting SoftAP: %s, passwd: %s\n", ap_ssid, ap_password);
+  WiFi.softAP(ap_ssid, ap_password);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+  // connect to wifi
+  //WiFi.begin(wifi_ssid, wifi_password);
 
   // Get the time from net and save it locally
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);

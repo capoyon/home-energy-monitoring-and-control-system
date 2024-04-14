@@ -11,26 +11,29 @@ AsyncWebServer server(80);
 
 void initWebServer();
 
+
+unsigned long previousMillis1 = 0;  // Stores the last time when the timer was updated
+unsigned long interval1 = 1000;     // Interval for 1 second
+
+unsigned long previousMillisMinute = 0;  // Stores the last time when the timer was updated
+unsigned long intervalMinute = 60000;     // Interval for 3 seconds
+
+unsigned long previousMillisHour = 0;  // Stores the last time when the timer was updated
+unsigned long intervalHour = 3600000;     // Hour interval
+
+
 void setup(){
   Serial.begin(115200);
   datahandler.init();
-  WiFi.softAP(datahandler.getAPSsid(), datahandler.getAPSsid());
-  datahandler.printLocalTime();
+
+  //datahandler.printLocalTime()
   initWebSocket();
   initWebServer();
 }
 
 
-unsigned long previousMillis1 = 0;  // Stores the last time when the timer was updated
-unsigned long interval1 = 1000;     // Interval for 1 second
-
-unsigned long previousMillis3 = 0;  // Stores the last time when the timer was updated
-unsigned long interval3 = 3000;     // Interval for 3 seconds
-
-unsigned long previousMillisHour = 0;  // Stores the last time when the timer was updated
-unsigned long intervalHour = 3600000;     // Hour interval
-
 void loop() {
+  delay(500);
   unsigned long currentMillis = millis();  // Get the current time
   
   // Timer for 1 second
@@ -41,9 +44,9 @@ void loop() {
     }
   }
 
-  // Timer for 3 seconds
-  if (currentMillis - previousMillis3 >= interval3) {
-    previousMillis3 = currentMillis;
+  // Timer for 1 minute
+  if (currentMillis -  previousMillisMinute >= intervalMinute) {
+    previousMillisMinute = currentMillis;
   }
 
   // save config every hour
@@ -93,7 +96,6 @@ void initWebServer() {
   server.on(datahandler.sensorReading, HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, datahandler.sensorReading, "text/plain");
   });
-
 
   server.begin();
 }
