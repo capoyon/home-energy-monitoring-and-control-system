@@ -3,60 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/general.css">
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f4f4f4;
-      }
-
-      #title-bar {
-        width: 100%;
-        color: #000000;
-        padding: 20px 0px 0px 30px;
-        box-sizing: border-box;
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1;
-        height: 70px;
-        background-color: #f4f4f4;
-      }
-
-      #title-bar a {
-        text-decoration: none;
-        color: #000000;
-        font-size: 25px;
-        font-weight: bolder;
-      }
-
-      #sidebar {
-        margin-top: 45px;
-        width: 145px;
-        height: 100%;
-        position: fixed;
-        top: 0;
-        left: 0;
-        overflow-x: hidden;
-        padding-top: 20px;
-      }
-
-      #sidebar a {
-        padding: 15px 20px;
-        text-decoration: none;
-        text-align: left;
-        font-size: 18px;
-        color: #000000;
-        display: block;
-        border-radius: 8px;
-      }
-
-      #sidebar .icon {
-        text-align: center;
-        padding: 10px 0;
-      }
-
+      
       #content {
         background-color: white;
         border-left: 2px solid #555;
@@ -84,40 +33,12 @@
       .input1 {
         width: 50px;
       }
+
       button:hover {
         background-color: #0056b3;
       }
 
-      #s {
-        display: none;
-      }
 
-      #sidebar a:hover {
-        background-color: rgb(224, 224, 224);
-      }
-
-      a.active {
-        background-color: rgb(179, 179, 179);
-        pointer-events: none;
-      }
-
-      @media screen and (max-width: 600px) {
-        #w {
-          display: none;
-        }
-
-        #s {
-          display: inherit;
-        }
-
-        #sidebar {
-          width: 50px;
-        }
-
-        #content {
-          margin-left: 50px;
-        }
-      }
     </style>
     <title>HEMS | automate</title>
   </head>
@@ -129,6 +50,7 @@
         </svg>
         <span id="w">Home Energy Monitoring & Control System</span>
         <span id="s"> HEMCS</span>
+        <span id="time">Mon Apr 15 00:00</span>
       </a>
     </div>
     <div id="sidebar">
@@ -160,7 +82,7 @@
       </div>
     </div>
     <div id="content">
-      <div class="card">
+      <div>
         <h2>Automation Settings</h2>
         <h4>Electricity Variables Automation</h4>
         <span>STATES: </span>
@@ -245,7 +167,7 @@
           </select>
           <br>
           <label for="time">Time:</label>
-          <input type="time" id="time" name="time">
+          <input type="time" id="time-select" name="time">
           <br><br><span>TASK: </span>
           <select id="task2">
             <option value="1">Turn off</option>
@@ -258,6 +180,7 @@
       <h4>Task List</h4>
       <div id="taskList"></div>
     </div>
+    <script src="general.js"></script>
     <script>
       var gateway = `ws://${window.location.hostname}/automate`;
     // var gateway = `ws://192.168.10.128/automate`;
@@ -288,20 +211,6 @@
       function onLoad(event) {
         initWebSocket();
       }
-
-      function adjustContentHeight() {
-        var element = document.getElementById('content');
-        var deviceHeight = window.innerHeight;
-        var elementHeight = element.offsetHeight;
-        // Compare element height with device height
-        if (elementHeight < deviceHeight) {
-          element.style.height = deviceHeight - 90 + 'px';
-        }
-      }
-      // Call the function when the window is resized
-      window.addEventListener('resize', adjustContentHeight);
-      // Call the function initially
-      adjustContentHeight();
 
       // Function to check if a string is a valid number or float
     function isValidNumber(input) {
@@ -359,7 +268,7 @@
             
         var month = document.getElementById('month').value;
         var day = document.getElementById('day').value;
-        var time = document.getElementById('time').value;
+        var time = document.getElementById('time-select').value;
         var task = document.getElementById('task2').value;
 
         // Check if time is blank

@@ -4,171 +4,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/general.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        p {
-            font-size: small;
-            padding: 0px;
-            margin: 5px;
-        }
-        #title-bar {
-            width: 100%;
-            color: #000000;
-            padding: 20px 0px 0px 30px;
-            box-sizing: border-box;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            height: 70px;
-            background-color: #f4f4f4;
-        }
-    
-        #title-bar a {
-            text-decoration: none;
-            color: #000000;
-            font-size: 25px;
-            font-weight: bolder;
-        }
-    
-        #sidebar {
-            margin-top: 45px;
-            width: 145px;
-            height: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            overflow-x: hidden;
-            padding-top: 20px;
-        }
-    
-        #sidebar a {
-            padding: 15px 20px;
-            text-decoration: none;
-            text-align: left;
-            font-size: 18px;
-            color: #000000;
-            display: block;
-            border-radius: 8px;
-        }
-    
-        #sidebar .icon {
-            text-align: center;
-            padding: 10px 0;
-        }
-    
-        #content {
-            background-color: white;
-            border-left: 2px solid #555;
-            border-top: 2px solid #555;
-            margin-top: calc(55px + 20px);
-            margin-left: 145px;
-            padding: 4px 10px 10px 10px;
-            border-top-left-radius: 10px;
-        }
-    
-        #s {
-            display: none;
-        }
-    
-        #sidebar a:hover {
-            background-color: rgb(224, 224, 224); 
-        }
-    
-        a.active {
-            background-color: rgb(179, 179, 179); 
-            pointer-events: none;
-        }
+    p {
+        font-size: small;
+        padding: 0px;
+        margin: 5px;
+    }
+    .switch {
+    position: absolute;
+    right: 0;
+    margin-right: 8px;
+    display: inline-block;
+    width: 95px;
+    height: 50px;
+}
 
-        .card {
-            position: relative;
-            background-color: #f0f0f0;
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border: 1px solid #999;
-            font-size: large;
-        }
+.switch input {
+    display: none;
+}
 
-        .switch {
-            position: absolute;
-            right: 0;
-            margin-right: 8px;
-            display: inline-block;
-            width: 95px;
-            height: 50px;
-        }
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 34px;
+}
 
-        .switch input {
-            display: none;
-        }
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 42px;
+    width: 42px;
+    left: 5px;
+    bottom: 4px;
+    background-color: #fff;
+    transition: .4s;
+    border-radius: 68px;
+}
 
-        .slider {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            border-radius: 34px;
-        }
+.button {
+    padding: 10px 20px;
+    background-color: rgb(24, 15, 146);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 42px;
-            width: 42px;
-            left: 5px;
-            bottom: 4px;
-            background-color: #fff;
-            transition: .4s;
-            border-radius: 68px;
-        }
+input:checked + .slider {
+    background-color: #2196F3;
+}
 
-        .button {
-            padding: 10px 20px;
-            background-color: rgb(24, 15, 146);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(42px);
-        }
-
-    
-        @media screen and (max-width: 600px) {
-            #w {
-                display: none;
-            }
-    
-            #s {
-                display: inherit;
-            }
-    
-            #sidebar {
-                width: 50px;
-            }
-    
-            #content {
-                margin-left: 50px;
-            }
-        }
-        </style>
+input:checked + .slider:before {
+    transform: translateX(42px);
+}
+    </style>
     <title>HEMS | settings</title>
 </head>
 
@@ -178,6 +72,7 @@
             <svg height="24" width="24" viewBox="0 0 384 512"><path opacity="1" fill="#1E3050" d="M0 256L28.5 28c2-16 15.6-28 31.8-28H228.9c15 0 27.1 12.1 27.1 27.1c0 3.2-.6 6.5-1.7 9.5L208 160H347.3c20.2 0 36.7 16.4 36.7 36.7c0 7.4-2.2 14.6-6.4 20.7l-192.2 281c-5.9 8.6-15.6 13.7-25.9 13.7h-2.9c-15.7 0-28.5-12.8-28.5-28.5c0-2.3 .3-4.6 .9-6.9L176 288H32c-17.7 0-32-14.3-32-32z"/></svg> 
             <span id="w">Home Energy Monitoring & Control System</span>
             <span id="s"> HEMCS</span>
+            <span id="time">Wed Apr 3 12:12</span>
         </a>
     </div>
 
@@ -222,6 +117,8 @@
             <button class="button" onclick="reboot()">Reboot</button>
            
     </div>
+
+<script src="general.js"></script>
 <script>
 var gateway = `ws://${window.location.hostname}/settings`;
 // var gateway = `ws://192.168.10.128/settings`;
@@ -380,24 +277,6 @@ function updateSettings(cmd, a, b) {
         console.error('Error sending data over websocket:', error);
     }
 }
-
-// Function to adjust element height
-function adjustContentHeight() {
-    var element = document.getElementById('content');
-    var deviceHeight = window.innerHeight;
-    var elementHeight = element.offsetHeight;
-
-    // Compare element height with device height
-    if (elementHeight < deviceHeight) {
-        element.style.height = deviceHeight - 90 + 'px';
-    }
-}
-
-// Call the function when the window is resized
-window.addEventListener('resize', adjustContentHeight);
-
-// Call the function initially
-adjustContentHeight();
 </script>
 </body>
 </html>
