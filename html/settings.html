@@ -218,10 +218,13 @@
             <div class="card">24 hour time format<label class="switch"><input type="checkbox" onchange="toggle24h(this)" id="is24h"><span class="slider"></span></label></div>
             <div class="card">Set time automatically<label class="switch"><input type="checkbox" onchange="toggleautotime(this)" id="auto_t"><span class="slider"></span></label></div>
             <div class="card">Set time <input type="datetime-local" id="select-datetime"></div>
+            <div class="card">Storage: <p>Total: <span id="totalstorage">...</span></p> <p>Used: <span id="usedstorage">...</span></p> <p>Free: <span id="freestorage">...</span></p><div><button class="button" onclick="deleteHistoryData()">Delete History</button></div></div>
             <button class="button" onclick="reboot()">Reboot</button>
+           
     </div>
 <script>
 var gateway = `ws://${window.location.hostname}/settings`;
+// var gateway = `ws://192.168.10.128/settings`;
 var websocket;
 window.addEventListener('load', onLoad);
 function initWebSocket() {
@@ -253,6 +256,9 @@ function onMessage(event) {
     document.getElementById("rate").innerHTML = data.rate;
     document.getElementById("is24h").checked = !!data.t_format;
     document.getElementById("auto_t").checked = !!data.t_auto;
+    document.getElementById("totalstorage").innerHTML = (data.total_storage/(1024*1024)).toFixed(2) + " MB";
+    document.getElementById("usedstorage").innerHTML = (data.used_storage/(1024*1024)).toFixed(2) + " MB";
+    document.getElementById("freestorage").innerHTML = ((data.total_storage-data.used_storage)/(1024*1024)).toFixed(2) + " MB";
 }
 
 document.getElementById('wifi').addEventListener('click', function() {
@@ -354,6 +360,11 @@ function reboot() {
     }
 }
 
+function deleteHistoryData() {
+    if (confirm("Are you sure you want to delete all history data?")) {
+        updateSettings(47);
+    }
+}
 // function for sending socket message
 function updateSettings(cmd, a, b) {
     try {

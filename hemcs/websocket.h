@@ -9,6 +9,7 @@
 
 extern DataHandler datahandler;
 extern AsyncWebSocket overview;
+extern AsyncWebSocket automate;
 extern AsyncWebSocket settings;
 
 void updateOverview();

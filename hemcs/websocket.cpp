@@ -3,6 +3,7 @@
 DataHandler datahandler;
 
 AsyncWebSocket overview("/overview");
+AsyncWebSocket automate("/automate");
 AsyncWebSocket settings("/settings");
 
 
@@ -35,7 +36,40 @@ void onEventOverview(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEv
     }
 }
 
-
+void onEventAutomate(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
+    if (type == WS_EVT_CONNECT) {
+        //client connected
+        Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
+        client->printf("%s","Send the list of automation");
+    } else if (type == WS_EVT_DISCONNECT) {
+        //client disconnected
+        Serial.printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+    } else if (type == WS_EVT_ERROR) {
+        //error was received from the other end
+        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+    } else if (type == WS_EVT_DATA) {
+        //data packet
+        AwsFrameInfo * info = (AwsFrameInfo*)arg;
+        if (info->final && info->index == 0 && info->len == len) {
+            //the whole message is in a single frame and we got all of it's data
+            Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+            if (info->opcode == WS_TEXT) {
+                strncpy(socket_buffer, (char*)data, min(len, socket_buffer_size - 1)); // Copy at most BUFFER_SIZE - 1 characters to buffer
+                socket_buffer[min(len, socket_buffer_size - 1)] = '\0'; // Null-terminate the string
+                Serial.printf("%s\n", socket_buffer);
+                //datahandler.handleSocketCommand(socket_buffer);
+                automate.textAll("New list of automation");
+            } else {
+                for (size_t i = 0; i < info->len; i++) {
+                    Serial.printf("%02x ", data[i]);
+                }
+                Serial.printf("\n");
+            }
+        } else {
+            // Handle multi-frame messages here
+        }
+    }
+}
 
 void onEventSettings(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
     if (type == WS_EVT_CONNECT) {
@@ -81,10 +115,12 @@ void onEventSettings(AsyncWebSocket * server, AsyncWebSocketClient * client, Aws
 
 void initWebSocket() {
     overview.onEvent(onEventOverview);
+    automate.onEvent(onEventAutomate);
     settings.onEvent(onEventSettings);
 }
 
 void cleanupClients(){
   overview.cleanupClients();
+  automate.cleanupClients();
   settings.cleanupClients();
 }

@@ -1,5 +1,5 @@
 #include "datahandler.h"
-
+  // pin pzem power meter
 Pzem pzem(16, 17);
 
 // Private
@@ -10,14 +10,28 @@ void DataHandler::changeAP(const char* name, const char* pass) {
 
 void DataHandler::init() {
   SPIFFS.begin(true);
-  freeSPIFFS = (SPIFFS.totalBytes() - SPIFFS.usedBytes()) / (1024.0 * 1024.0);
-  Serial.printf("Available SPIFFS: %f MB\n", freeSPIFFS);
   loadConfig();
-
-  //connect to wifi and start hotspot
-  WiFi.softAP(ap_ssid, ap_password);
+  //connect to wifi
   WiFi.begin(wifi_ssid, wifi_password);
+
+  // Get the time from net and save it locally
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time from the internet");
+  }
 }
+
+
+// void DataHandler::setCustomTime(const char* posixTime) {
+//   time_t rawtime;
+//   struct tm timeinfo;
+  
+//   strptime(posixTime, "%Y-%m-%dT%H:%M:%S", &timeinfo);
+//   rawtime = mktime(&timeinfo);
+//   //setTime(rawtime);
+//   locatime(rawtime);
+// }
+
 
 void DataHandler::reCreateFile(const char* name) {
   SPIFFS.remove(name);
@@ -26,12 +40,12 @@ void DataHandler::reCreateFile(const char* name) {
 }
 
 
-void DataHandler::saveConfig() {
-  reCreateFile(config);
+void DataHandler::saveConfig() {;
   File file = SPIFFS.open(config, FILE_WRITE);
   sprintf(buffer, ":=:%s:=:%s:=:%s:=:%s:=:%d:=:%f:=:%d:=:%d:=:",
           wifi_ssid, wifi_password, ap_ssid, ap_password, currency, electric_rate, is24HourFormat, isAutoSetTime);
   file.write((uint8_t*)buffer, strlen(buffer));
+  file.close();
 }
 
 void DataHandler::loadConfig() {
@@ -63,7 +77,27 @@ void DataHandler::loadConfig() {
       token = strtok(NULL, ":=:");
       i++;
   }
-  Serial.printf("Saved config data: %s\n", getSettingsJSON());
+  strcpy(wifi_ssid, data[0]);
+  strcpy(wifi_password, data[1]);
+  strcpy(ap_ssid, data[2]);
+  strcpy(ap_password, data[3]);
+  currency = atoi(data[4]);
+  electric_rate = atof(data[5]);
+  is24HourFormat = atoi(data[6]);
+  isAutoSetTime = atoi(data[7]);
+  Serial.printf("config loaded: %s\n", getSettingsJSON());
+}
+
+void DataHandler::saveSensorReading() {
+  File file = SPIFFS.open(sensorReading, FILE_APPEND);
+  sprintf(buffer, ":=:%s:=:%s:=:%s:=:%s:=:%d:=:%f:=:%d:=:%d:=:\n",
+          wifi_ssid, wifi_password, ap_ssid, ap_password, currency, electric_rate, is24HourFormat, isAutoSetTime);
+  file.write((uint8_t*)buffer, strlen(buffer));
+  file.close();
+}
+
+void DataHandler::deleteHistoryData() {
+  reCreateFile(sensorReading);
 }
 
 
@@ -89,8 +123,10 @@ char* DataHandler::getSettingsJSON()
   } else {
     strcpy(localIP, "NOT CONNECTED");
   }
-  sprintf(buffer, "{\"sta\":\"%s\", \"sta_p\":\"%s\", \"ap\":\"%s\",\"ap_p\":\"%s\", \"cur\":\"%d\",\"rate\":%f,\"t_format\":%d,\"t_auto\":%d}",
-          wifi_ssid, localIP, ap_ssid, ap_password, currency, electric_rate, is24HourFormat, isAutoSetTime);
+  totalStorage =  SPIFFS.totalBytes();
+  usedStorage =  SPIFFS.usedBytes();
+  sprintf(buffer, "{\"sta\":\"%s\", \"sta_p\":\"%s\", \"ap\":\"%s\",\"ap_p\":\"%s\", \"cur\":\"%d\",\"rate\":%f,\"t_format\":%d,\"t_auto\":%d,\"total_storage\":%d,\"used_storage\":%d}",
+          wifi_ssid, localIP, ap_ssid, ap_password, currency, electric_rate, is24HourFormat, isAutoSetTime, totalStorage, usedStorage);
   return buffer;
 }
 
@@ -125,14 +161,14 @@ void DataHandler::handleSocketCommand(const char* command) {
     case 40: // Change Wi-Fi station credential
       strcpy(wifi_ssid, data[1]);
       strcpy(wifi_password, data[2]);
-      Serial.printf("WiFi credentials have changed: %s:%s\n", wifi_ssid, wifi_password);
       WiFi.begin(wifi_ssid, wifi_password);
+      Serial.printf("WiFi credentials have changed: %s:%s\n", wifi_ssid, wifi_password);
       break;
     case 41: // Change Wi-Fi hotspot credential
       strcpy(ap_ssid, data[1]);
       strcpy(ap_password, data[2]);
-      Serial.printf("AP credentials have changed: %s:%s\n", ap_ssid, ap_password);
       WiFi.softAP(ap_ssid, ap_password);
+      Serial.printf("AP credentials have changed: %s:%s\n", ap_ssid, ap_password);
       break;
     case 42: // change currency type
       currency =  atoi(data[1]);
@@ -155,6 +191,12 @@ void DataHandler::handleSocketCommand(const char* command) {
       Serial.printf("Time is set to: %s\n", data[1]);
       return;
       break;
+    case 47: // delete history data
+      // Todo
+      deleteHistoryData();
+      Serial.printf("History data deleted\n");
+      return;
+      break;
     case 99:
       ESP.restart();
     default:
@@ -162,4 +204,15 @@ void DataHandler::handleSocketCommand(const char* command) {
       return;
   }
   saveConfig();
+}
+
+void DataHandler::printLocalTime(){
+  time_t posix_time = mktime(&timeinfo);
+  uint8_t month = timeinfo.tm_mon + 1;
+  uint8_t monthDay = timeinfo.tm_mday;
+  uint8_t weekDay = timeinfo.tm_wday;
+  uint8_t hour = timeinfo.tm_hour;
+  uint8_t minute = timeinfo.tm_min;
+  Serial.printf("Time from net: \nposix: %ld\nmonth: %d\nMonth day: %d\nWeek Day: %d\nHour: %d\nMinute: %d\n",
+  posix_time, month, monthDay, weekDay, hour, minute);
 }

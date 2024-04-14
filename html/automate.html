@@ -182,7 +182,7 @@
           <input type="text" id="second-input" class="input1" style="display: none;">
 
           <br><br><span>TASK: </span>
-          <select id="action-select">
+          <select id="task1">
             <option value="1">Turn off</option>
             <option value="2">Turn on</option>
             <option value="3">Toggle</option>
@@ -191,7 +191,7 @@
         </form>
         <h4>Time Variable Automation</h4>
         <form id="appointment-form">
-          <label for="month">Select Month:</label>
+          <label for="month">Month:</label>
           <select id="month" name="month">
             <option value="0">Any</option>
             <option value="1">January</option>
@@ -208,7 +208,7 @@
             <option value="12">December</option>
           </select>
           <br>
-          <label for="day">Select Day:</label>
+          <label for="day">Day:</label>
           <select id="day" name="day">
             <option value="0">Any</option>
             <option value="1">1</option>
@@ -244,8 +244,14 @@
             <option value="31">31</option>
           </select>
           <br>
-          <label for="time">Select Time:</label>
-          <input type="time" id="time" name="time"><br>
+          <label for="time">Time:</label>
+          <input type="time" id="time" name="time">
+          <br><br><span>TASK: </span>
+          <select id="task2">
+            <option value="1">Turn off</option>
+            <option value="2">Turn on</option>
+            <option value="3">Toggle</option>
+          </select>
           <button type="submit" id="t2btn" class="submit">Add Task</button>
         </form>
       </div>
@@ -254,11 +260,12 @@
     </div>
     <script>
       var gateway = `ws://${window.location.hostname}/automate`;
-      var websocket;
-      window.addEventListener('load', onLoad);
+    // var gateway = `ws://192.168.10.128/automate`;
+    var websocket;
+    window.addEventListener('load', onLoad);
 
       function initWebSocket() {
-        console.log('Trying to open a WebSocket connection...');
+        console.log('Connecting socket: ' + gateway);
         websocket = new WebSocket(gateway);
         websocket.onopen = onOpen;
         websocket.onclose = onClose;
@@ -266,7 +273,7 @@
       }
 
       function onOpen(event) {
-        console.log('Connection opened');
+        console.log('Socket connection opened');
       }
 
       function onClose(event) {
@@ -339,10 +346,12 @@
         var comparisonSelectValue = document.getElementById('comparison-select').value;
         var firstInputValue = document.getElementById('first-input').value;
         var secondInputValue = document.getElementById('second-input').value;
-        var actionSelectValue = document.getElementById('action-select').value;
+        var task = document.getElementById('task1').value;
 
         // Print form values to the console
-        console.log(":=:" + firstSelectValue + ":=:" + comparisonSelectValue  + ":=:" + firstInputValue  + ":=:" + secondInputValue  + ":=:" + actionSelectValue);
+        data = ":=:" + "1" + ":=:" + firstSelectValue + ":=:" + comparisonSelectValue  + ":=:" + firstInputValue  + ":=:" + secondInputValue  + ":=:" + task+ ":=:";
+        console.log(data);
+        addTask(data);
     });
 
     document.getElementById('appointment-form').addEventListener('submit', function(event) {
@@ -351,6 +360,7 @@
         var month = document.getElementById('month').value;
         var day = document.getElementById('day').value;
         var time = document.getElementById('time').value;
+        var task = document.getElementById('task2').value;
 
         // Check if time is blank
         if (time.trim() === '') {
@@ -362,9 +372,22 @@
         var [hour, minute] = time.split(':');
 
         // Log form data to the console
-        var data = ":=:" + month + ":=:" + day + ":=:" +  hour + ":=:" + minute + ":=:";
+        var data = ":=:" + "2" + ":=:" + month + ":=:" + day + ":=:" +  hour + ":=:" + minute + ":=:" + task + ":=:";
         console.log(data);
+        addTask(data);
     });
+
+    function addTask(data) {
+        try {
+            if (websocket.readyState === websocket.OPEN) {
+                websocket.send(data);
+            } else {
+                console.error('Websocket connection is not open.');
+            }
+        } catch (error) {
+            console.error('Error sending data over websocket:', error);
+        }
+    }
 
     </script>
   </body>

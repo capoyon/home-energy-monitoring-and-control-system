@@ -3,6 +3,8 @@
 
 #include <WiFi.h>
 #include "SPIFFS.h"
+#include <ESP32Time.h>
+#include "time.h"
 #include "pzem.h"
 
 #define BUFFER_SIZE 512
@@ -10,14 +12,15 @@
 
 class DataHandler {
 private:
+    // for getting the time for internet
+    const char* ntpServer = "time.google.com";
+    const long  gmtOffset_sec = 8 * 3600; //philippines gmt
+    const int   daylightOffset_sec = 0;
+    struct tm timeinfo;
     
     char buffer[BUFFER_SIZE];
-    
-
-    const char* config = "/config.json";
-    const char* data = "/data.json";
-
-    float freeSPIFFS;
+    size_t usedStorage;
+    size_t totalStorage;
     char wifi_ssid[60]= "WiFi";
     char  wifi_password[60]= "password112233";
     char  ap_ssid[60] = "HEMCS";
@@ -30,21 +33,28 @@ private:
     void changeAP(const char* name, const char* pass);
     void reCreateFile(const char *name);
 
+
+
 public:
+    //Spiffs file directory
+    const char* config = "/config.hemcs";
+    const char* sensorReading = "/historydata.hemcs";
+    const char* automation = "/automation.hemcs";
+
     void init();
+    void setCustomTime(const char* posixTime);
     void saveConfig();
     void loadConfig();
-    char* getWifiSSID() {
-        return wifi_ssid;
-    }
-
+    void saveSensorReading();
+    void deleteHistoryData();
 
     char* getSensorDataJSON();
     char* getSettingsJSON();
-
-
     void handleSocketCommand(const char *command);
 
+    char* getWifiSSID() {
+        return wifi_ssid;
+    }
     char* getWifiPassword() {
         return wifi_password;
     }
@@ -57,20 +67,7 @@ public:
         return ap_password;
     }
 
-    char getCurrency() {
-        return currency;
-    }
-
-    float getElectricRate() {
-        return electric_rate;
-    }
-    bool getIs24HourFormat() {
-        return is24HourFormat;
-    }
-
-    bool getIsAutoSetTime() {
-        return isAutoSetTime;
-    }
+    void printLocalTime();
 };
 
 #endif //DATAHANDLER_H

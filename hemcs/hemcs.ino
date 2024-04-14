@@ -4,45 +4,53 @@
 #include "datahandler.h"
 #include "html.h"
 #include "websocket.h"
-#include "time.h"
 
-// for time management
-const char* ntpServer = "time.google.com";
-const long  gmtOffset_sec = 8 * 3600; //philippines gmt
-const int   daylightOffset_sec = 0;
 
 // port for webserver
 AsyncWebServer server(80); 
 
-// for non blocking delay
-unsigned long previousMillis = 0;
-
-void printLocalTime();
 void initWebServer();
 
 void setup(){
   Serial.begin(115200);
   datahandler.init();
-  
-  // Init and get the time
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  printLocalTime();
-  
+  WiFi.softAP(datahandler.getAPSsid(), datahandler.getAPSsid());
+  datahandler.printLocalTime();
   initWebSocket();
   initWebServer();
 }
 
 
-void loop() {
-  unsigned long currentMillis = millis();  
+unsigned long previousMillis1 = 0;  // Stores the last time when the timer was updated
+unsigned long interval1 = 1000;     // Interval for 1 second
 
-  if (currentMillis - previousMillis >= 1000) {
-    cleanupClients();
+unsigned long previousMillis3 = 0;  // Stores the last time when the timer was updated
+unsigned long interval3 = 3000;     // Interval for 3 seconds
+
+unsigned long previousMillisHour = 0;  // Stores the last time when the timer was updated
+unsigned long intervalHour = 3600000;     // Hour interval
+
+void loop() {
+  unsigned long currentMillis = millis();  // Get the current time
+  
+  // Timer for 1 second
+  if (currentMillis - previousMillis1 >= interval1) {
+    previousMillis1 = currentMillis;
     if(overview.count()>0){
         updateOverview();
     }
-    previousMillis = currentMillis;
-    // printLocalTime();
+  }
+
+  // Timer for 3 seconds
+  if (currentMillis - previousMillis3 >= interval3) {
+    previousMillis3 = currentMillis;
+  }
+
+  // save config every hour
+  if (currentMillis - previousMillisHour >= intervalHour ) {
+    previousMillisHour = currentMillis;
+    datahandler.saveSensorReading();
+    cleanupClients();
   }
 }
 
@@ -50,6 +58,7 @@ void loop() {
 void initWebServer() {
   //socket connections
   server.addHandler(&overview);
+  server.addHandler(&automate);
   server.addHandler(&settings);
 
   // html route for request
@@ -73,15 +82,10 @@ void initWebServer() {
     request->send_P(200, "text/html", settings_html, settings_html_len);
   });
 
-  server.begin();
-}
+  server.on(datahandler.sensorReading, HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, datahandler.sensorReading, "text/plain");
+  });
 
-void printLocalTime(){
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return;
-  }
-  time_t posix_time = mktime(&timeinfo);
-  Serial.println(posix_time);
+
+  server.begin();
 }
