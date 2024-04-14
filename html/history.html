@@ -5,6 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="/general.css">
+    <style>
+    #graphcontent {
+        background-color: white;
+        border-left: 2px solid #555;
+        border-top: 2px solid #555;
+        margin-top: calc(55px + 20px);
+        margin-left: 145px;
+        padding: 4px 10px 10px 10px;
+        border-top-left-radius: 10px;
+    }
+    @media screen and (max-width: 770px) {
+    #graphcontent {
+        margin-left: 50px;
+    }
+}
+    </style>
     <title>HEMS | history</title>
 </head>
 
@@ -40,7 +56,7 @@
         </div>
     </div>
 
-    <div id="content">
+    <div id="graphcontent">
         <h1>Saturday April 6</h1>
         <div id="dailyChart" class="chart"></div>
         <h1>April 2024</h1>
@@ -71,23 +87,9 @@
         function onMessage(event) {
             var state;
             console.log(event.data);
-            if (event.data == "1") {
-                state = "ON";
-            }
-            else {
-                state = "OFF";
-            }
-            document.getElementById('state').innerHTML = state;
         }
         function onLoad(event) {
             initWebSocket();
-            initButton();
-        }
-        function initButton() {
-            document.getElementById('button').addEventListener('click', toggle);
-        }
-        function toggle() {
-            websocket.send('toggle');
         }
 
 
