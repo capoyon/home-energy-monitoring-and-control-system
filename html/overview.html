@@ -73,11 +73,11 @@
         <div class="card-grid">
             <div class="card">
                 <p class="card-title"><i class="fas fa-thermometer-threequarters" style="color:#059e8a;"></i> Energy Usage</p>
-                <p class="reading"><span id="energy">...</span> Kilowatt-hour ≈ <span class="currency">P</span><span id="kwh_amount">...</span></p>
+                <p class="reading"><span id="energy">...</span> Kilowatt-hour ≈ <span class="currency" id="cur">P</span><span id="kwh_amount">...</span></p>
             </div>
             <div class="card">
                 <p class="card-title"><i class="fas fa-thermometer-threequarters" style="color:#059e8a;"></i>Instantenous Power</p>
-                <p class="reading"><span id="power">...</span> Watt ≈ <span class="currency">P</span><span id="w_amount">...</span>/hour</p>
+                <p class="reading"><span id="power">...</span> Watt ≈ <span class="currency" id="cur1">P</span><span id="w_amount">...</span>/hour</p>
             </div>
         </div>
         <h2>Live Graph</h2>
@@ -88,6 +88,8 @@
 var data = [];
 var lines = [];
 var isTableInit = false;
+var rate = 18;
+const currSymbols = ["₱", "$", "€", "£", "¥"];
 
 window.addEventListener('load', onLoad);
 
@@ -115,8 +117,20 @@ function onClose(event) {
 function onMessage(event) {
     console.log(event.data);
     var jsonObject = JSON.parse(event.data);
-    var httpdata = jsonObject.data;
-    graphSensorData(httpdata);
+    
+    if ('sta' in jsonObject) {
+        document.getElementById("cur").innerHTML = currSymbols[jsonObject.cur];
+        document.getElementById("cur1").innerHTML = currSymbols[jsonObject.cur];
+        rate = jsonObject.rate;
+    } else {
+        var data = jsonObject.data;
+        changeElementVal(data[0],"energy")
+        changeElementVal(data[0]*rate,"kwh_amount")
+        changeElementVal(data[1],"power")
+        changeElementVal(data[1]*rate/1000,"w_amount")
+        graphSensorData(data);
+    }
+    
 }
 
 function onLoad(event) {
@@ -221,10 +235,6 @@ function addLiveGraph() {
         lines[i].append(Date.now(), data[i+1]);
         changeElementVal(data[i+1],`lg${i}_total`);
     }
-    changeElementVal(data[0],"energy")
-    changeElementVal(data[0]*18,"kwh_amount")
-    changeElementVal(data[1],"power")
-    changeElementVal(data[1]*18/1000,"w_amount")
 }
 
 function changeElementVal(newVal, id) {

@@ -115,13 +115,12 @@ input:checked + .slider:before {
             <div class="card">Set time <input type="datetime-local" id="select-datetime"></div>
             <div class="card">Storage: <p>Total: <span id="totalstorage">...</span></p> <p>Used: <span id="usedstorage">...</span></p> <p>Free: <span id="freestorage">...</span></p><div><button class="button" onclick="deleteHistoryData()">Delete History</button></div></div>
             <button class="button" onclick="reboot()">Reboot</button>
-           
+            <button class="button" onclick="resetMeter()" style="background-color: rgb(170, 0, 0);">Reset Meter</button>
     </div>
 
 <script src="general.js"></script>
 <script>
 var gateway = `ws://${window.location.hostname}/settings`;
-// var gateway = `ws://192.168.10.128/settings`;
 var websocket;
 window.addEventListener('load', onLoad);
 function initWebSocket() {
@@ -150,7 +149,7 @@ function onMessage(event) {
     document.getElementById("ap_p").innerHTML = "Password: " + data.ap_p;
     document.getElementById("currency").selectedIndex = data.cur;
     document.getElementById("rate_cur").innerHTML = document.getElementById("currency").value;
-    document.getElementById("rate").innerHTML = data.rate;
+    document.getElementById("rate").innerHTML = data.rate.toFixed(2);
     document.getElementById("is24h").checked = !!data.t_format;
     document.getElementById("auto_t").checked = !!data.t_auto;
     document.getElementById("totalstorage").innerHTML = (data.total_storage/(1024*1024)).toFixed(2) + " MB";
@@ -256,6 +255,14 @@ function reboot() {
         updateSettings(99);
     }
 }
+
+function resetMeter() {
+    var userInput = prompt("Type 'yes' to reset meter reading:");
+    if (userInput && userInput.toLowerCase() === "yes") {
+        updateSettings(98);
+    }
+}
+
 
 function deleteHistoryData() {
     if (confirm("Are you sure you want to delete all history data?")) {

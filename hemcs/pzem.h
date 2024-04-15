@@ -17,6 +17,7 @@ class Pzem {
     float energy();
     float frequency();
     float powerfactor();
+    void reset();
     
 };
 

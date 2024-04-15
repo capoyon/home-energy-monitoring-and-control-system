@@ -27,3 +27,7 @@ float Pzem::frequency() {
 float Pzem::powerfactor() {
     return pzem.pf();
 }
+
+void Pzem::reset() {
+  pzem.resetEnergy();
+}

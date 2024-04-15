@@ -13,10 +13,11 @@
 class DataHandler {
 private:
     // for getting the time for internet
-    const char* ntpServer = "time.google.com";
-    const long  gmtOffset_sec = 8 * 3600; //philippines gmt
+    const char* ntp1 = "time.google.com";
+    const char* ntp2 = "time.cloudflare.com";
+    const char* ntp3 = "time.facebook.com";
+    const int  gmtOffset_sec = 8 * 3600; //philippines gmt
     const int   daylightOffset_sec = 0;
-    struct tm timeinfo;
     
     char buffer[BUFFER_SIZE];
     size_t usedStorage;
@@ -67,6 +68,8 @@ public:
         return ap_password;
     }
 
+
+    void setTimeFromNTP();
     void printLocalTime();
 };
 

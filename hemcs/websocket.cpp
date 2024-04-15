@@ -14,24 +14,16 @@ void updateOverview() {
     overview.textAll(datahandler.getSensorDataJSON());
 }
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
-  //todo
-}
 
 
 void onEventOverview(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
     switch (type) {
     case WS_EVT_CONNECT:
         Serial.printf("Overview: #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        client->printf("%s", datahandler.getSettingsJSON());
         break;
     case WS_EVT_DISCONNECT:
         Serial.printf("Overview: #%u disconnected\n", client->id());
-        break;
-    case WS_EVT_DATA:
-        handleWebSocketMessage(arg, data, len);
-        break;
-    case WS_EVT_PONG:
-    case WS_EVT_ERROR:
         break;
     }
 }
@@ -97,6 +89,7 @@ void onEventSettings(AsyncWebSocket * server, AsyncWebSocketClient * client, Aws
                 Serial.printf("%s\n", socket_buffer);
                 datahandler.handleSocketCommand(socket_buffer);
                 settings.textAll(datahandler.getSettingsJSON());
+                overview.textAll(datahandler.getSettingsJSON());
             } else {
                 for (size_t i = 0; i < info->len; i++) {
                     Serial.printf("%02x ", data[i]);

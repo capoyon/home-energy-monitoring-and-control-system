@@ -1,6 +1,8 @@
 #include "datahandler.h"
-  // pin pzem power meter
+// pin pzem power meter
 Pzem pzem(16, 17);
+
+ESP32Time rtc(8 * 3600); 
 
 // Private
 void DataHandler::changeAP(const char* name, const char* pass) {
@@ -19,25 +21,16 @@ void DataHandler::init() {
   Serial.print("AP IP address: ");
   Serial.println(IP);
   // connect to wifi
-  //WiFi.begin(wifi_ssid, wifi_password);
+  WiFi.begin(wifi_ssid, wifi_password);
 
   // Get the time from net and save it locally
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time from the internet");
-  }
+  // rtc.setTime(30, 24, 15, 17, 1, 2021);  // 17th Jan 2021 15:24:30
+  rtc.setTime(1609459200);  // 1st Jan 2021 00:00:00
+  // //rtc.offset = 7200; // change offset value
+  printLocalTime();
+  setTimeFromNTP();
+  printLocalTime();
 }
-
-
-// void DataHandler::setCustomTime(const char* posixTime) {
-//   time_t rawtime;
-//   struct tm timeinfo;
-  
-//   strptime(posixTime, "%Y-%m-%dT%H:%M:%S", &timeinfo);
-//   rawtime = mktime(&timeinfo);
-//   //setTime(rawtime);
-//   locatime(rawtime);
-// }
 
 
 void DataHandler::reCreateFile(const char* name) {
@@ -204,6 +197,9 @@ void DataHandler::handleSocketCommand(const char* command) {
       Serial.printf("History data deleted\n");
       return;
       break;
+    case 98:
+      pzem.reset();
+      break;
     case 99:
       ESP.restart();
     default:
@@ -213,13 +209,28 @@ void DataHandler::handleSocketCommand(const char* command) {
   saveConfig();
 }
 
+
+/**** Time Stuffs ****/
+
+void DataHandler::setTimeFromNTP() {
+  configTime(gmtOffset_sec, daylightOffset_sec, ntp1, ntp2, ntp3);
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo)){
+    Serial.print("NTP Time: ");
+    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S"); 
+    rtc.setTimeStruct(timeinfo); 
+  }
+}
+
+void DataHandler::setCustomTime(const char* posixTime) {
+  time_t rawtime;
+  struct tm timeinfo;
+  
+  strptime(posixTime, "%Y-%m-%dT%H:%M:%S", &timeinfo);
+  rawtime = mktime(&timeinfo);
+  localtime(&rawtime);
+}
+
 void DataHandler::printLocalTime(){
-  time_t posix_time = mktime(&timeinfo);
-  uint8_t month = timeinfo.tm_mon + 1;
-  uint8_t monthDay = timeinfo.tm_mday;
-  uint8_t weekDay = timeinfo.tm_wday;
-  uint8_t hour = timeinfo.tm_hour;
-  uint8_t minute = timeinfo.tm_min;
-  Serial.printf("Time from net: \nposix: %ld\nmonth: %d\nMonth day: %d\nWeek Day: %d\nHour: %d\nMinute: %d\n",
-  posix_time, month, monthDay, weekDay, hour, minute);
+  Serial.println(rtc.getTimeDate(true));
 }
