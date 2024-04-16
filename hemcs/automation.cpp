@@ -1,6 +1,7 @@
 #include "automation.h"
 
 // Global variables (simulated inputs)
+
 int variables[4] = {0, 1, 2, 3}; // Array to hold variables
 
 // Task function type
@@ -117,3 +118,19 @@ void task(int taskNum) {
             break;
     }
 }
+
+void removeProfile(Profile profiles[], int& numProfiles, int indexToRemove) {
+    if (indexToRemove < 0 || indexToRemove >= numProfiles) {
+        // Invalid index
+        return;
+    }
+
+    // Shift elements after the indexToRemove one position to the left
+    for (int i = indexToRemove; i < numProfiles - 1; ++i) {
+        profiles[i] = profiles[i + 1];
+    }
+
+    // Decrement the count of profiles
+    --numProfiles;
+}
+

@@ -2,22 +2,24 @@
 #define DATAHANDLER_H
 
 #include <WiFi.h>
+#include <cmath>
+// For time
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+#include "RTClib.h"
+
+// Local library
 #include "SPIFFS.h"
-#include <ESP32Time.h>
 #include "time.h"
 #include "pzem.h"
+
+
 
 #define BUFFER_SIZE 512
 #define CONFIG_NUM 8
 
 class DataHandler {
 private:
-    // for getting the time for internet
-    const char* ntp1 = "time.google.com";
-    const char* ntp2 = "time.cloudflare.com";
-    const char* ntp3 = "time.facebook.com";
-    const int  gmtOffset_sec = 8 * 3600; //philippines gmt
-    const int   daylightOffset_sec = 0;
     
     char buffer[BUFFER_SIZE];
     size_t usedStorage;
@@ -31,19 +33,32 @@ private:
     bool is24HourFormat = false;
     bool isAutoSetTime = true;
 
-    void changeAP(const char* name, const char* pass);
-    void reCreateFile(const char *name);
+  void reCreateFile(const char *name);
 
 
 
 public:
+    float energy = 0.0f;
+    float power = 0.0f;
+    float voltage = 0.0f;
+    float current = 0.0f;
+    float frequency = 0.0f;
+    float powerfactor = 0.0f;
+
+    float prev_energy = 0.0f;
+    float prev_power = 0.0f;
+    float prev_voltage = 0.0f;
+    float prev_current = 0.0f;
+    float prev_frequency = 0.0f;
+    float prev_powerfactor = 0.0f;
+
     //Spiffs file directory
     const char* config = "/config.hemcs";
     const char* sensorReading = "/historydata.hemcs";
     const char* automation = "/automation.hemcs";
 
     void init();
-    void setCustomTime(const char* posixTime);
+    bool readElectricity();
     void saveConfig();
     void loadConfig();
     void saveSensorReading();
@@ -68,9 +83,7 @@ public:
         return ap_password;
     }
 
-
-    void setTimeFromNTP();
-    void printLocalTime();
+    unsigned long getNTPEpoch();
 };
 
 #endif //DATAHANDLER_H

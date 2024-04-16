@@ -2,36 +2,89 @@
 // pin pzem power meter
 Pzem pzem(16, 17);
 
-ESP32Time rtc(8 * 3600); 
+//Time management
+RTC_DS3231 rtc;
+const char* ntpServer = "time.facebook.com";
+const int  gmtOffset_sec = 8 * 3600; //philippines gmt
 
-// Private
-void DataHandler::changeAP(const char* name, const char* pass) {
-  // chagne the ap name and password and its save config files.
-}
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, ntpServer, gmtOffset_sec);
+
 
 
 void DataHandler::init() {
   SPIFFS.begin(true);
   loadConfig();
 
+  // connect to wifi
+  int timeout = 30; //3 seconds
+  Serial.printf("Conecting WiFi: %s, passwd: %s ", wifi_ssid, wifi_password);
+  WiFi.begin(wifi_ssid, wifi_password);
+  while(WiFi.status() != WL_CONNECTED){
+    if(timeout == 0 ) {
+      Serial.printf("\nUnable to connect WiFi\n");
+      break;
+    }
+    Serial.print(".");
+    //timeout--;
+    delay(100);
+  }
+  if((WiFi.status() == WL_CONNECTED)){
+    Serial.print("\nWifi Connected with Local IP: ");
+    Serial.println(WiFi.localIP());
+  }
   //start soft ap
-  Serial.printf("Starting SoftAP: %s, passwd: %s\n", ap_ssid, ap_password);
+  Serial.printf("\nStarting SoftAP: %s, passwd: %s\n", ap_ssid, ap_password);
   WiFi.softAP(ap_ssid, ap_password);
   IPAddress IP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(IP);
-  // connect to wifi
-  WiFi.begin(wifi_ssid, wifi_password);
 
-  // Get the time from net and save it locally
-  // rtc.setTime(30, 24, 15, 17, 1, 2021);  // 17th Jan 2021 15:24:30
-  rtc.setTime(1609459200);  // 1st Jan 2021 00:00:00
-  // //rtc.offset = 7200; // change offset value
-  printLocalTime();
-  setTimeFromNTP();
-  printLocalTime();
+  if(rtc.begin()) {
+    if(isAutoSetTime && timeClient.update()) {
+      unsigned long epochTime = timeClient.getEpochTime();
+      rtc.adjust(DateTime(epochTime));
+      Serial.print("Time updated from NTP: ");
+      Serial.println(epochTime);
+    }
+    DateTime now = rtc.now();
+    Serial.print("ESP32 RTC Date Time: ");
+    Serial.printf("RTC epoch: %lu = ", now.unixtime());
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(" (");
+    Serial.print(now.dayOfTheWeek());
+    Serial.print(") ");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.println(now.second(), DEC);
+  } else {
+    Serial.println("RTC module is NOT found");
+  }
 }
 
+bool DataHandler::readElectricity() {
+  if(isnan(pzem.energy())) return false;
+  prev_energy = energy;
+  prev_power = power;
+  prev_voltage = voltage;
+  prev_current = current;
+  prev_frequency = frequency;
+  prev_powerfactor = powerfactor;
+
+  energy = pzem.energy();
+  power = pzem.power();
+  voltage = pzem.voltage();
+  current = pzem.current();
+  frequency = pzem.frequency();
+  powerfactor = pzem.powerfactor();
+  return true;
+}
 
 void DataHandler::reCreateFile(const char* name) {
   SPIFFS.remove(name);
@@ -90,8 +143,7 @@ void DataHandler::loadConfig() {
 
 void DataHandler::saveSensorReading() {
   File file = SPIFFS.open(sensorReading, FILE_APPEND);
-  sprintf(buffer, ":=:%s:=:%s:=:%s:=:%s:=:%d:=:%f:=:%d:=:%d:=:\n",
-          wifi_ssid, wifi_password, ap_ssid, ap_password, currency, electric_rate, is24HourFormat, isAutoSetTime);
+  sprintf(buffer, ":=:%lu:=:%.2f:=:", rtc.now().unixtime(), energy);
   file.write((uint8_t*)buffer, strlen(buffer));
   file.close();
 }
@@ -102,16 +154,7 @@ void DataHandler::deleteHistoryData() {
 
 
 char* DataHandler::getSensorDataJSON() {
-  float sensor_data[6];
-  sensor_data[0] = pzem.energy();
-  sensor_data[1] = pzem.power();
-  sensor_data[2] = pzem.voltage();
-  sensor_data[3] = pzem.current();
-  sensor_data[4] = pzem.frequency();
-  sensor_data[5] = pzem.powerfactor();
-  sprintf(buffer, "{\"data\": [%f, %f, %f, %f, %f, %f]}",
-          sensor_data[0], sensor_data[1], sensor_data[2],
-          sensor_data[3], sensor_data[4], sensor_data[5]);
+  sprintf(buffer, "{\"data\": [%f, %f, %f, %f, %f, %f]}", energy, power, voltage, current, frequency, powerfactor);
   return buffer;
 }
 
@@ -212,25 +255,7 @@ void DataHandler::handleSocketCommand(const char* command) {
 
 /**** Time Stuffs ****/
 
-void DataHandler::setTimeFromNTP() {
-  configTime(gmtOffset_sec, daylightOffset_sec, ntp1, ntp2, ntp3);
-  struct tm timeinfo;
-  if (getLocalTime(&timeinfo)){
-    Serial.print("NTP Time: ");
-    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S"); 
-    rtc.setTimeStruct(timeinfo); 
-  }
-}
-
-void DataHandler::setCustomTime(const char* posixTime) {
-  time_t rawtime;
-  struct tm timeinfo;
-  
-  strptime(posixTime, "%Y-%m-%dT%H:%M:%S", &timeinfo);
-  rawtime = mktime(&timeinfo);
-  localtime(&rawtime);
-}
-
-void DataHandler::printLocalTime(){
-  Serial.println(rtc.getTimeDate(true));
+unsigned long DataHandler::getNTPEpoch() {
+  timeClient.update();
+  return timeClient.getEpochTime();
 }

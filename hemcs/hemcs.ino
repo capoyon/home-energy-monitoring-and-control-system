@@ -39,8 +39,9 @@ void loop() {
   // Timer for 1 second
   if (currentMillis - previousMillis1 >= interval1) {
     previousMillis1 = currentMillis;
-    if(overview.count()>0){
-        updateOverview();
+    if(datahandler.readElectricity()){
+      if(overview.count()>0) updateOverview();
+      if(abs(datahandler.energy - datahandler.prev_energy) > 3 ) datahandler.saveSensorReading();
     }
   }
 
