@@ -14,7 +14,7 @@
 #include "pzem.h"
 
 
-
+extern RTC_DS3231 rtc;
 #define BUFFER_SIZE 512
 #define CONFIG_NUM 8
 
@@ -38,6 +38,9 @@ private:
 
 
 public:
+    float energy_last_recorded = 0.0f;
+    float power_last_recorded = 0.0f;
+
     float energy = 0.0f;
     float power = 0.0f;
     float voltage = 0.0f;
@@ -84,6 +87,7 @@ public:
     }
 
     unsigned long getNTPEpoch();
+    void updateTimeFromNTP();
 };
 
 #endif //DATAHANDLER_H

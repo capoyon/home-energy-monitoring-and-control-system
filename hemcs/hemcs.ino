@@ -33,15 +33,21 @@ void setup(){
 
 
 void loop() {
-  delay(500);
   unsigned long currentMillis = millis();  // Get the current time
   
   // Timer for 1 second
   if (currentMillis - previousMillis1 >= interval1) {
     previousMillis1 = currentMillis;
     if(datahandler.readElectricity()){
-      if(overview.count()>0) updateOverview();
-      if(abs(datahandler.energy - datahandler.prev_energy) > 3 ) datahandler.saveSensorReading();
+
+      if(overview.count()>0) {
+        updateOverview();
+      }
+
+      // there is 3 Watts change in reading record it to file
+      if(abs(datahandler.power - datahandler.power_last_recorded) > 2 ) {
+        datahandler.saveSensorReading();
+      }
     }
   }
 

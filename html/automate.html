@@ -180,8 +180,23 @@
           <button type="submit" id="t2btn" class="submit">Add Task</button>
         </form>
       </div>
+
       <h4>Task List</h4>
-      <div id="taskList"></div>
+      <div id="taskList" style="overflow-x: auto;">
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 8px; text-align: left;">Trigger</th>
+              <th style="padding: 8px; text-align: left;">Operation</th>
+              <th style="padding: 8px; text-align: left;">Value</th>
+              <th style="padding: 8px; text-align: left;">Task</th>
+              <th style="padding: 8px; text-align: left;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
     </div>
     <script src="general.js"></script>
     <script>
@@ -189,7 +204,6 @@
     // var gateway = `ws://192.168.10.128/automate`;
     var websocket;
     window.addEventListener('load', onLoad);
-
       function initWebSocket() {
         console.log('Connecting socket: ' + gateway);
         websocket = new WebSocket(gateway);
@@ -300,7 +314,38 @@
             console.error('Error sending data over websocket:', error);
         }
     }
+    
+    function clearAndAddData() {
+        // Clear the table
+        var table = document.querySelector("#taskList tbody");
+        table.innerHTML = "";
 
+        // Add new data
+        var newData = `
+          <tr>
+            <td style="padding: 8px;">Electricity Variables</td>
+            <td style="padding: 8px;">Equals (=)</td>
+            <td style="padding: 8px;">100</td>
+            <td style="padding: 8px;">Turn off</td>
+            <td style="padding: 8px;">
+              <span style="margin-right: 5px;">Turn off: Pin 11</span>
+              <button onclick="deleteRow(this)" style="padding: 5px 10px;">Delete</button>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;">Time Variable</td>
+            <td style="padding: 8px;">January, 1, 08:00</td>
+            <td style="padding: 8px;">-</td>
+            <td style="padding: 8px;">Turn on</td>
+            <td style="padding: 8px;">
+              <span style="margin-right: 5px;">Toggle: Pin 12</span>
+              <button onclick="deleteRow(this)" style="padding: 5px 10px;">Delete</button>
+            </td>
+          </tr>
+        `;
+        table.innerHTML = newData;
+      }
+      clearAndAddData();
     </script>
   </body>
 </html>

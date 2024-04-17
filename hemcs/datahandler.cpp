@@ -26,7 +26,7 @@ void DataHandler::init() {
       break;
     }
     Serial.print(".");
-    //timeout--;
+    timeout--;
     delay(100);
   }
   if((WiFi.status() == WL_CONNECTED)){
@@ -41,12 +41,7 @@ void DataHandler::init() {
   Serial.println(IP);
 
   if(rtc.begin()) {
-    if(isAutoSetTime && timeClient.update()) {
-      unsigned long epochTime = timeClient.getEpochTime();
-      rtc.adjust(DateTime(epochTime));
-      Serial.print("Time updated from NTP: ");
-      Serial.println(epochTime);
-    }
+    updateTimeFromNTP();
     DateTime now = rtc.now();
     Serial.print("ESP32 RTC Date Time: ");
     Serial.printf("RTC epoch: %lu = ", now.unixtime());
@@ -143,9 +138,10 @@ void DataHandler::loadConfig() {
 
 void DataHandler::saveSensorReading() {
   File file = SPIFFS.open(sensorReading, FILE_APPEND);
-  sprintf(buffer, ":=:%lu:=:%.2f:=:", rtc.now().unixtime(), energy);
+  sprintf(buffer, "%lu:%.2f\n", rtc.now().unixtime(), power);
   file.write((uint8_t*)buffer, strlen(buffer));
   file.close();
+  power_last_recorded = power;
 }
 
 void DataHandler::deleteHistoryData() {
@@ -254,8 +250,16 @@ void DataHandler::handleSocketCommand(const char* command) {
 
 
 /**** Time Stuffs ****/
-
 unsigned long DataHandler::getNTPEpoch() {
   timeClient.update();
   return timeClient.getEpochTime();
+}
+
+void DataHandler::updateTimeFromNTP(){
+  if(isAutoSetTime && timeClient.update()) {
+      unsigned long epochTime = timeClient.getEpochTime();
+      rtc.adjust(DateTime(epochTime));
+      Serial.print("Time updated from NTP: ");
+      Serial.println(epochTime);
+    }
 }
