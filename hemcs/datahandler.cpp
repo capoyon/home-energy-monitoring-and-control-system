@@ -1,4 +1,6 @@
 #include "datahandler.h"
+
+
 // pin pzem power meter
 Pzem pzem(16, 17);
 
@@ -248,6 +250,64 @@ void DataHandler::handleSocketCommand(const char* command) {
   saveConfig();
 }
 
+void DataHandler::handleAutomationCommand(const char* command) {
+  char* token;
+  size_t command_len = strlen(command) + 1;
+  if (command_len > 190) {
+    Serial.println("Socket data to large");
+    return;
+  }
+  char str[command_len]; 
+  strcpy(str, command);
+  char data[10][20];
+  token = strtok(str, ":"); 
+  int i = 0;
+  while (token != NULL && i < 10) {
+    strcpy(data[i], token);
+    token = strtok(NULL, ":");
+    i++;
+  }
+
+  uint8_t targetSensor = atoi(data[0]);
+  uint8_t operation = atoi(data[1]);
+  
+  float wantedVal1 = atof(data[2]);
+  float wantedVal2 = atof(data[3]);
+  // for time
+  uint8_t month = atoi(data[4]);
+  uint8_t monthDay = atoi(data[5]);
+  uint8_t weekDay = atoi(data[6]);
+  uint8_t hour = atoi(data[7]);
+  uint8_t minute  = atoi(data[8]);
+
+  uint8_t taskNum = atoi(data[9]);
+  Serial.printf("Saving Task: %d::%d::%0.2f::%0.2f::%d::%d::%d::%d::%d::%d", targetSensor, operation, wantedVal1, wantedVal2,
+              month, monthDay, weekDay, hour, minute, taskNum);
+  addProfile(targetSensor, operation, wantedVal1, wantedVal2,
+              month, monthDay, weekDay, hour, minute, taskNum);
+}
+
+char* DataHandler::getAllProfileData() {
+  buffer[0] = '\0';
+
+    // Concatenate each iteration to the buffer
+    for (int i = 0; i < numProfiles; i++) {
+        char temp[50]; // Adjust size as needed
+        sprintf(temp, "%d:%d:%0.2f:%0.2f:%d:%d:%d:%d:%d:%d:", profiles[i].targetSensor, profiles[i].operation, profiles[i].wantedVal1,
+            profiles[i].wantedVal2, profiles[i].month, profiles[i].monthDay, profiles[i].weekDay,
+            profiles[i].hour, profiles[i].minute, profiles[i].taskNum);
+        
+        // Concatenate temp to buffer
+        strcat(buffer, temp);
+
+        // Add '&' after each iteration except the last one
+        if (i != numProfiles - 1) {
+            strcat(buffer, "&");
+        }
+    }
+
+  return buffer;
+}
 
 /**** Time Stuffs ****/
 unsigned long DataHandler::getNTPEpoch() {
@@ -262,4 +322,134 @@ void DataHandler::updateTimeFromNTP(){
       Serial.print("Time updated from NTP: ");
       Serial.println(epochTime);
     }
+}
+
+
+/// automation
+
+void DataHandler::addProfile(uint8_t targetSensor, uint8_t operation, float wantedVal1, float wantedVal2,
+                             uint8_t month, uint8_t monthDay, uint8_t weekDay, uint8_t hour, uint8_t minute, 
+                             uint8_t taskNum){
+    if (numProfiles < MAX_PROFILES) {
+        profiles[numProfiles].targetSensor = targetSensor;
+        profiles[numProfiles].operation = operation;
+        profiles[numProfiles].month = month;
+        profiles[numProfiles].monthDay = monthDay;
+        profiles[numProfiles].weekDay = weekDay;
+        profiles[numProfiles].hour = hour;
+        profiles[numProfiles].minute = minute;
+        profiles[numProfiles].wantedVal1 = wantedVal1;
+        profiles[numProfiles].wantedVal2 = wantedVal2;
+        profiles[numProfiles].taskNum = taskNum;
+        numProfiles++;
+    } else {
+        Serial.printf("Max profiles reached.\n");
+    }
+}
+
+void DataHandler::taskWatcher() {
+  for (int i = 0; i < numProfiles; i++) {
+    bool conditionMet = false;
+    float targetSensorVal = 0.0f;
+
+    if (profiles[i].targetSensor == 0 ) {
+      // Time-based condition check
+      DateTime now = rtc.now();
+      uint8_t month = now.month();
+      uint8_t monthDay = now.day();
+      uint8_t weekDay = now.dayOfTheWeek();
+      uint8_t hour = now.hour();
+      uint8_t minute = now.minute();
+      if ((profiles[i].month == 0 || profiles[i].month == month) &&
+          (profiles[i].monthDay == 0 || profiles[i].monthDay == monthDay) &&
+          (profiles[i].weekDay == 0 || profiles[i].weekDay == weekDay) &&
+          (profiles[i].hour == hour) &&
+          (profiles[i].minute == minute)) {
+        conditionMet = true;
+      }
+    }
+    else {
+      // Sensor-based condition check
+      switch (profiles[i].targetSensor) {
+        case 1:
+          targetSensorVal = energy;
+          break;
+        case 2:
+          targetSensorVal = power;
+          break; // Add break statement
+        case 3:
+          targetSensorVal = voltage;
+          break;
+        case 4:
+          targetSensorVal = current;
+          break;
+        default:
+          Serial.printf("Invalid target sensor in profile.\n");
+          continue; // Skip this profile
+      }
+      
+      // Operation check
+      switch (profiles[i].operation) {
+        case 0: // Equal
+          conditionMet = (round(targetSensorVal * 100) == round(profiles[i].wantedVal1 * 100));
+          break;
+        case 1: // Less than
+          conditionMet = (round(targetSensorVal * 100) < round(profiles[i].wantedVal1 * 100));
+          break;
+        case 2: // Greater than
+          conditionMet = (round(targetSensorVal * 100) > round(profiles[i].wantedVal1 * 100));
+          break;
+        case 3: // Range
+          conditionMet = (round(targetSensorVal * 100) > round(profiles[i].wantedVal1 * 100) && round(targetSensorVal * 100) < round(profiles[i].wantedVal2 * 100));
+          break;
+        default:
+          Serial.printf("Invalid operation in profile.\n");
+          continue; // Skip this profile
+      }
+
+    }
+    
+    if (conditionMet) {
+      // Run the corresponding task
+      executeTask(profiles[i].taskNum);
+      removeProfile(i);
+    }
+  }
+}
+
+
+void DataHandler::executeTask(int taskNum) {
+  switch (taskNum) {
+      case 1:
+          Serial.printf("Running Task 1\n");
+          digitalWrite(2, 0);
+          break;
+      case 2:
+          Serial.printf("Running Task 2\n");
+          digitalWrite(2, 1);
+          break;
+      case 3:
+          Serial.printf("Running Task 2\n");
+          digitalWrite(2, !digitalRead(2));
+          break;
+      // Add more cases for additional tasks if needed
+      default:
+          Serial.printf("Invalid task number.\n");
+          break;
+  }
+}
+
+void DataHandler::removeProfile(int indexToRemove) {
+  if (indexToRemove < 0 || indexToRemove >= numProfiles) {
+      // Invalid index
+      return;
+  }
+
+  // Shift elements after the indexToRemove one position to the left
+  for (int i = indexToRemove; i < numProfiles - 1; ++i) {
+      profiles[i] = profiles[i + 1];
+  }
+
+  // Decrement the count of profiles
+  --numProfiles;
 }

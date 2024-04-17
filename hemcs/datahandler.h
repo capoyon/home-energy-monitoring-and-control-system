@@ -14,13 +14,36 @@
 #include "pzem.h"
 
 
+
 extern RTC_DS3231 rtc;
 #define BUFFER_SIZE 512
 #define CONFIG_NUM 8
 
 class DataHandler {
 private:
-    
+    // for automation
+    struct Profile {
+      uint8_t targetSensor; // Index of the variable to compare to 0 = time, 1 = energy, 2 = power, 3 = voltage, 4 = current
+      uint8_t operation;     // 0 for equal, 1 for less than, and 2 for greater than, 3 between
+      
+      float wantedVal1;
+      float wantedVal2; // for between
+      
+      // for time
+      uint8_t month = 0;
+      uint8_t monthDay = 0;
+      uint8_t weekDay = 0;
+      uint8_t hour = 0;
+      uint8_t minute = 0;  
+
+      uint8_t taskNum; // task to perform
+    };
+
+    // Array to hold profiles
+    static const int MAX_PROFILES = 20;
+    Profile profiles[MAX_PROFILES];
+    int numProfiles = 0;
+
     char buffer[BUFFER_SIZE];
     size_t usedStorage;
     size_t totalStorage;
@@ -69,7 +92,9 @@ public:
 
     char* getSensorDataJSON();
     char* getSettingsJSON();
+    char* getAllProfileData();
     void handleSocketCommand(const char *command);
+    void handleAutomationCommand(const char* command);
 
     char* getWifiSSID() {
         return wifi_ssid;
@@ -88,6 +113,14 @@ public:
 
     unsigned long getNTPEpoch();
     void updateTimeFromNTP();
+
+   void addProfile(uint8_t targetSensor = 0 , uint8_t operation = 0, float wantedVal1 = 0, float wantedVal2 = 0, 
+                    uint8_t month = 0, uint8_t monthDay = 0, uint8_t weekDay = 0, uint8_t hour = 0, uint8_t minute = 0,
+                    uint8_t taskNum = 0);
+    void taskWatcher();
+    void task(int taskNum);
+    void removeProfile(int indexToRemove);
+    void executeTask(int taskNum);
 };
 
 #endif //DATAHANDLER_H

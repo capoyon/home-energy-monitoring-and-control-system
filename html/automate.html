@@ -285,18 +285,17 @@ document.getElementById('wantedVal2').addEventListener('input', function() { // 
           alert("Invalid value");
           return;
         }
-        var data = ":=:" + targetSensor + 
-                   ":=:" + operation + 
-                   ":=:" + wantedVal1 +
-                   ":=:" + wantedVal2 + 
-                   ":=:" + "0" +
-                   ":=:" + "0" +
-                   ":=:" + "0" +
-                   ":=:" + "0" +
-                   ":=:" + "0" +
-                   ":=:" + task + 
-                   ":=:";
-        console.log(data);
+        var data = ":" + targetSensor + 
+                   ":" + operation + 
+                   ":" + wantedVal1 +
+                   ":" + wantedVal2 + 
+                   ":" + "0" +
+                   ":" + "0" +
+                   ":" + "0" +
+                   ":" + "0" +
+                   ":" + "0" +
+                   ":" + task + 
+                   ":";
         addTask(data);
     });
 
@@ -318,33 +317,35 @@ document.getElementById('wantedVal2').addEventListener('input', function() { // 
 
         var [hour, minute] = time.split(':');
 
-        var data = ":=:" + "0" + 
-                   ":=:" + "0" + 
-                   ":=:" + "0" +
-                   ":=:" + "0" +
-                   ":=:" + month + 
-                   ":=:" + monthDay +
-                   ":=:" + weekDay + 
-                   ":=:" +  hour + 
-                   ":=:" + minute + 
-                   ":=:" + task + 
-                   ":=:";
-
-        console.log(data);
+        var data = ":" + "0" + 
+                   ":" + "0" + 
+                   ":" + "0" +
+                   ":" + "0" +
+                   ":" + month + 
+                   ":" + monthDay +
+                   ":" + weekDay + 
+                   ":" +  hour + 
+                   ":" + minute + 
+                   ":" + task + 
+                   ":";
         addTask(data);
     });
 
-    function addTask(data) {
-        try {
-            if (websocket.readyState === websocket.OPEN) {
-                websocket.send(data);
-            } else {
-                console.error('Websocket connection is not open.');
-            }
-        } catch (error) {
-            console.error('Error sending data over websocket:', error);
+
+
+    function addTask(socket_data) {
+    try {
+        console.log(socket_data);
+
+        if (websocket.readyState === websocket.OPEN) {
+            websocket.send(socket_data);
+        } else {
+            console.error('Websocket connection is not open.');
         }
+    } catch (error) {
+        console.error('Error sending data over websocket:', error);
     }
+}
     
     function clearAndAddData() {
         // Clear the table

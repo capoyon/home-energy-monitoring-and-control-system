@@ -27,6 +27,7 @@ void setup(){
   datahandler.init();
 
   //datahandler.printLocalTime()
+  pinMode(2, OUTPUT);
   initWebSocket();
   initWebServer();
 }
@@ -49,6 +50,7 @@ void loop() {
         datahandler.saveSensorReading();
       }
     }
+    datahandler.taskWatcher();
   }
 
   // Timer for 1 minute
