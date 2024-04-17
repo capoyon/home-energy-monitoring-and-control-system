@@ -233,7 +233,7 @@ function addLiveGraph() {
 
     for (var i = 0; i < lines.length; i++) {
         lines[i].append(Date.now(), data[i+1]);
-        changeElementVal(data[i+1],`lg${i}_total`);
+        changeElementVal(data[i+1]-0.02,`lg${i}_total`);
     }
 }
 

@@ -77,22 +77,22 @@
         <h2>Automation Settings</h2>
         <h4>Electricity Variables Automation</h4>
         <span>STATES: </span>
-        <form id="automation-form">
-          <select id="first-select">
+        <form id="var_automation">
+          <select id="targetSensor">
             <option value="1">Energy (kWh)</option>
             <option value="2">Power (W)</option>
             <option value="3">Voltage (V)</option>
             <option value="4">Current (A)</option>
           </select>
-          <select id="comparison-select">
+          <select id="operation">
             <option value="1">Equals: =</option>
             <option value="2">Between</option>
             <option value="3">Less than: &lt;</option>
             <option value="4">Greater Than: &gt;</option>
           </select>
-          <input type="text" id="first-input" class="input1">
+          <input type="text" id="wantedVal1" class="input1">
           <span id="second-input-label" style="display: none;">and</span>
-          <input type="text" id="second-input" class="input1" style="display: none;">
+          <input type="text" id="wantedVal2" class="input1" style="display: none;">
 
           <br><br><span>TASK: </span>
           <select id="task1">
@@ -121,8 +121,8 @@
             <option value="12">December</option>
           </select>
           <br>
-          <label for="day">Day of the month:</label>
-          <select id="day" name="day">
+          <label for="monthDay">Day of the month:</label>
+          <select id="monthDay" name="monthDay">
             <option value="0">Any</option>
             <option value="1">1</option>
             <option value="2">2</option>
@@ -157,8 +157,8 @@
             <option value="31">31</option>
           </select>
           <br>
-          <label for="day">Day of the week:</label>
-          <select id="day" name="day">
+          <label for="weekDay">Day of the week:</label>
+          <select id="weekDay" name="weekDay">
             <option value="0">Any</option>
             <option value="1">Sunday</option>
             <option value="2">Monday</option>
@@ -183,7 +183,7 @@
 
       <h4>Task List</h4>
       <div id="taskList" style="overflow-x: auto;">
-        <table border="1" style="width: 100%; border-collapse: collapse;">
+        <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="background-color: #f2f2f2;">
               <th style="padding: 8px; text-align: left;">Trigger</th>
@@ -234,48 +234,68 @@
         return !isNaN(parseFloat(input)) && isFinite(input);
     }
 
-    document.getElementById('comparison-select').addEventListener('change', function() {
-        var comparisonValue = this.value;
-        var secondInputLabel = document.getElementById('second-input-label');
-        var secondInput = document.getElementById('second-input');
+    document.getElementById('operation').addEventListener('change', function() {
+    var secondInputLabel = document.getElementById('second-input-label');
+    var secondInput = document.getElementById('wantedVal2');
 
-        if (comparisonValue === '2') {
-            secondInputLabel.style.display = 'inline';
-            secondInput.style.display = 'inline';
-        } else {
-            secondInputLabel.style.display = 'none';
-            secondInput.style.display = 'none';
-        }
-    });
+    if (this.value === '2') { // Changed from comparisonValue to this.value
+        secondInputLabel.style.display = 'inline';
+        secondInput.style.display = 'inline';
+    } else {
+        secondInputLabel.style.display = 'none';
+        secondInput.style.display = 'none';
+    }
+});
+
 
     // Validate input fields to allow only numbers or floats
-    document.getElementById('first-input').addEventListener('input', function() {
-        var value = this.value;
-        if (!isValidNumber(value)) {
-            this.value = value.slice(0, -1); // Remove the last character if it's not a valid number
-        }
-    });
+    document.getElementById('wantedVal1').addEventListener('input', function() { // Changed from wantedVar1 to wantedVal1
+    var value = this.value;
+    if (!isValidNumber(value)) {
+        this.value = value.slice(0, -1); // Remove the last character if it's not a valid number
+    }
+});
 
-    document.getElementById('second-input').addEventListener('input', function() {
-        var value = this.value;
-        if (!isValidNumber(value)) {
-            this.value = value.slice(0, -1); // Remove the last character if it's not a valid number
-        }
-    });
+document.getElementById('wantedVal2').addEventListener('input', function() { // Changed from wantedVar2 to wantedVal2
+    var value = this.value;
+    if (!isValidNumber(value)) {
+        this.value = value.slice(0, -1); // Remove the last character if it's not a valid number
+    }
+});
+
 
     // Add event listener to the form submit button
-    document.getElementById('automation-form').addEventListener('submit', function(event) {
+    document.getElementById('var_automation').addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent form submission
         
         // Retrieve form values
-        var firstSelectValue = document.getElementById('first-select').value;
-        var comparisonSelectValue = document.getElementById('comparison-select').value;
-        var firstInputValue = document.getElementById('first-input').value;
-        var secondInputValue = document.getElementById('second-input').value;
+        var numberPattern = /^-?\d*\.?\d+$/;
+        var targetSensor = document.getElementById('targetSensor').value;
+        var operation = document.getElementById('operation').value;
+        var wantedVal1 = document.getElementById('wantedVal1').value;
+        var wantedVal2 = document.getElementById('wantedVal2').value;
         var task = document.getElementById('task1').value;
-
-        // Print form values to the console
-        data = ":=:" + "1" + ":=:" + firstSelectValue + ":=:" + comparisonSelectValue  + ":=:" + firstInputValue  + ":=:" + secondInputValue  + ":=:" + task+ ":=:";
+        if(!numberPattern.test(wantedVal1)) {
+          alert("Invalid value");
+          return;
+        }
+        if(operation != 2 ) {
+          wantedVal2 = 0;
+        }else if(!numberPattern.test(wantedVal2)) {
+          alert("Invalid value");
+          return;
+        }
+        var data = ":=:" + targetSensor + 
+                   ":=:" + operation + 
+                   ":=:" + wantedVal1 +
+                   ":=:" + wantedVal2 + 
+                   ":=:" + "0" +
+                   ":=:" + "0" +
+                   ":=:" + "0" +
+                   ":=:" + "0" +
+                   ":=:" + "0" +
+                   ":=:" + task + 
+                   ":=:";
         console.log(data);
         addTask(data);
     });
@@ -284,7 +304,8 @@
         event.preventDefault(); // Prevent the default form submission behavior
             
         var month = document.getElementById('month').value;
-        var day = document.getElementById('day').value;
+        var monthDay = document.getElementById('monthDay').value;
+        var weekDay = document.getElementById('weekDay').value;
         var time = document.getElementById('time-select').value;
         var task = document.getElementById('task2').value;
 
@@ -297,8 +318,18 @@
 
         var [hour, minute] = time.split(':');
 
-        // Log form data to the console
-        var data = ":=:" + "2" + ":=:" + month + ":=:" + day + ":=:" +  hour + ":=:" + minute + ":=:" + task + ":=:";
+        var data = ":=:" + "0" + 
+                   ":=:" + "0" + 
+                   ":=:" + "0" +
+                   ":=:" + "0" +
+                   ":=:" + month + 
+                   ":=:" + monthDay +
+                   ":=:" + weekDay + 
+                   ":=:" +  hour + 
+                   ":=:" + minute + 
+                   ":=:" + task + 
+                   ":=:";
+
         console.log(data);
         addTask(data);
     });
