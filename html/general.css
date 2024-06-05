@@ -1,8 +1,5 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
 }
 
 #title-bar {
@@ -16,7 +13,9 @@ body {
     z-index: 1;
     height: 70px;
     background-color: #f4f4f4;
+    border-bottom: 2px solid #555;
 }
+
 
 #title-bar a {
     text-decoration: none;
@@ -42,10 +41,11 @@ body {
     width: 145px;
     height: 100%;
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     overflow-x: hidden;
     padding-top: 20px;
+    border-right: 2px solid #555;
+
 }
 
 #sidebar a {
@@ -65,12 +65,9 @@ body {
 
 #content {
     background-color: white;
-    border-left: 2px solid #555;
-    border-top: 2px solid #555;
     margin-top: calc(55px + 20px);
     margin-left: 145px;
     padding: 4px 10px 10px 10px;
-    border-top-left-radius: 10px;
 }
 
 #s {

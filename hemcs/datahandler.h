@@ -10,7 +10,6 @@
 
 // Local library
 #include "SPIFFS.h"
-#include "time.h"
 #include "pzem.h"
 
 
@@ -21,7 +20,10 @@ extern RTC_DS3231 rtc;
 
 class DataHandler {
 private:
-    // for automation
+    // char buffer for general use
+    char buffer[BUFFER_SIZE];
+
+    // variable for automations
     struct Profile {
       uint8_t targetSensor; // Index of the variable to compare to 0 = time, 1 = energy, 2 = power, 3 = voltage, 4 = current
       uint8_t operation;     // 0 for equal, 1 for less than, and 2 for greater than, 3 between
@@ -43,15 +45,16 @@ private:
     static const int MAX_PROFILES = 20;
     Profile profiles[MAX_PROFILES];
     int numProfiles = 0;
-
-    char buffer[BUFFER_SIZE];
+    
     size_t usedStorage;
     size_t totalStorage;
+
+    // variable that stores user configs
     char wifi_ssid[60]= "WiFi";
-    char  wifi_password[60]= "password112233";
+    char  wifi_password[60]= "changeme";
     char  ap_ssid[60] = "HEMCS";
-    char ap_password[60] = "hemcs123";
-    int currency = 0;
+    char ap_password[60] = "changeme";
+    int currency = 0; // 0 = PHP, 1 = 
     float electric_rate = 18;
     bool is24HourFormat = false;
     bool isAutoSetTime = true;

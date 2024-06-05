@@ -1,21 +1,3 @@
-function adjustContentHeight(elementHeight) {
-    if(elementHeight>0){
-        element.style.height = elementHeight + 'px';
-    } else {
-        var element = document.getElementById('content');
-        var deviceHeight = window.innerHeight;
-        var elementHeight = element.offsetHeight;
-        if (elementHeight < deviceHeight) {
-            element.style.height = deviceHeight - 90 + 'px';
-        } else {
-            element.style.height = elementHeight + 'px';
-        }
-    }
-}
-window.addEventListener('resize', adjustContentHeight);
-adjustContentHeight();
-
-
 // update time
 function updateTime(epochTime, use24HourFormat = false) {
     const date = new Date(epochTime * 1000);

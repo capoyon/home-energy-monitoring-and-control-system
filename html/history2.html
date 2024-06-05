@@ -147,6 +147,7 @@
       function onLoad(event) {
         console.log(url)
         fetchAndPrintTextFile(url);
+        renderChart();
       }
       function renderChart(last24HourData, last24HourTime, dailyAverageData, dailyAverageDate, montlyAverageData, montlyAverageTime) {
         var monthlyOptions = {
@@ -160,11 +161,11 @@
           },
           series: [{
             name: 'Daily Consumption',
-            data: dailyAverageData
+            data: [1,2,3,4]
           }],
           xaxis: {
             type: 'category',
-            categories: dailyAverageDate
+            categories: [5,6,8,9]
           },
           colors: ['#4682B4']
         };
@@ -181,11 +182,11 @@
           },
           series: [{
             name: 'Power (W)',
-            data: last24HourData
+            data: [12.00,12.00,12.10,12.10,12.00,12.10,12.10,12.10,12.00,12.10, 19, 0]
           }],
           xaxis: {
             type: 'category',
-            categories: last24HourTime
+            categories:  ["10:14", "10:24", "10:34", "10:44", "10:54", "11:04", "11:14", "11:24", "11:34", "11:44", "34:34", "kd"]
           },
           fill: {
             type: 'gradient',

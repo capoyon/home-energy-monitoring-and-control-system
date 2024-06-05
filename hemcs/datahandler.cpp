@@ -8,18 +8,29 @@ Pzem pzem(16, 17);
 RTC_DS3231 rtc;
 const char* ntpServer = "time.facebook.com";
 const int  gmtOffset_sec = 8 * 3600; //philippines gmt
-
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, ntpServer, gmtOffset_sec);
 
 
-
+/*
+  * start rtc
+  * start spiffs
+  * load the save config from spiffs to a into variable
+  * start connectitvity
+*/
 void DataHandler::init() {
   SPIFFS.begin(true);
   loadConfig();
 
+  //start soft ap
+  Serial.printf("\nStarting SoftAP: %s, passwd: %s\n", ap_ssid, ap_password);
+  WiFi.softAP(ap_ssid, ap_password);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+
   // connect to wifi
-  int timeout = 30; //3 seconds
+  int timeout = 100; // 1 second delay check
   Serial.printf("Conecting WiFi: %s, passwd: %s ", wifi_ssid, wifi_password);
   WiFi.begin(wifi_ssid, wifi_password);
   while(WiFi.status() != WL_CONNECTED){
@@ -34,18 +45,15 @@ void DataHandler::init() {
   if((WiFi.status() == WL_CONNECTED)){
     Serial.print("\nWifi Connected with Local IP: ");
     Serial.println(WiFi.localIP());
+  } else {
+    Serial.print("Wifi connecting timout");
   }
-  //start soft ap
-  Serial.printf("\nStarting SoftAP: %s, passwd: %s\n", ap_ssid, ap_password);
-  WiFi.softAP(ap_ssid, ap_password);
-  IPAddress IP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(IP);
+
 
   if(rtc.begin()) {
     updateTimeFromNTP();
     DateTime now = rtc.now();
-    Serial.print("ESP32 RTC Date Time: ");
+    Serial.print("RTC timecheck: ");
     Serial.printf("RTC epoch: %lu = ", now.unixtime());
     Serial.print(now.year(), DEC);
     Serial.print('/');
@@ -232,7 +240,7 @@ void DataHandler::handleSocketCommand(const char* command) {
       Serial.printf("Time is set to: %s\n", data[1]);
       return;
       break;
-    case 47: // delete history data
+    case 47:// delete history data
       // Todo
       deleteHistoryData();
       Serial.printf("History data deleted\n");
@@ -283,17 +291,25 @@ void DataHandler::handleAutomationCommand(const char* command) {
   uint8_t taskNum = atoi(data[9]);
   Serial.printf("Saving Task: %d::%d::%0.2f::%0.2f::%d::%d::%d::%d::%d::%d", targetSensor, operation, wantedVal1, wantedVal2,
               month, monthDay, weekDay, hour, minute, taskNum);
-  addProfile(targetSensor, operation, wantedVal1, wantedVal2,
+  if(targetSensor == 99) {
+    removeProfile(operation);
+  } else {
+    addProfile(targetSensor, operation, wantedVal1, wantedVal2,
               month, monthDay, weekDay, hour, minute, taskNum);
+  }
+  
 }
 
 char* DataHandler::getAllProfileData() {
+  Serial.print("Number of profiles: ");
+  Serial.println(numProfiles);
   buffer[0] = '\0';
+  strcat(buffer, "[");
 
     // Concatenate each iteration to the buffer
     for (int i = 0; i < numProfiles; i++) {
         char temp[50]; // Adjust size as needed
-        sprintf(temp, "%d:%d:%0.2f:%0.2f:%d:%d:%d:%d:%d:%d:", profiles[i].targetSensor, profiles[i].operation, profiles[i].wantedVal1,
+        sprintf(temp, "[%d,%d,%0.2f,%0.2f,%d,%d,%d,%d,%d,%d]", profiles[i].targetSensor, profiles[i].operation, profiles[i].wantedVal1,
             profiles[i].wantedVal2, profiles[i].month, profiles[i].monthDay, profiles[i].weekDay,
             profiles[i].hour, profiles[i].minute, profiles[i].taskNum);
         
@@ -302,10 +318,10 @@ char* DataHandler::getAllProfileData() {
 
         // Add '&' after each iteration except the last one
         if (i != numProfiles - 1) {
-            strcat(buffer, "&");
+            strcat(buffer, ",");
         }
     }
-
+   strcat(buffer, "]");
   return buffer;
 }
 
